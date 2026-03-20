@@ -1,0 +1,4167 @@
+{
+  "bosses": [
+    {
+      "id": 2383,
+      "name": "Hungering Destroyer",
+      "nick": "Hungering Destroyer",
+      "spells": [
+        {
+          "spell_id": 329455,
+          "name": "Desolate",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 334522,
+          "name": "Consume",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2398,
+      "name": "Shriekwing",
+      "nick": "Shriekwing",
+      "spells": [
+        {
+          "spell_id": 345397,
+          "name": "Wave of Blood",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 342863,
+          "name": "Echoing Screech",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 328921,
+          "name": "Blood Shroud",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2399,
+      "name": "Sludgefist",
+      "nick": "Sludgefist",
+      "spells": [
+        {
+          "spell_id": 332687,
+          "name": "Colossal Roar",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 332318,
+          "name": "Destructive Stomp",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 331314,
+          "name": "Destructive Impact",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2402,
+      "name": "Sun King's Salvation",
+      "nick": "Sun King",
+      "spells": [
+        {
+          "spell_id": 343026,
+          "name": "Ember Blast",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 337859,
+          "name": "Cloak of Flames (Heal)",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2405,
+      "name": "Artificer Xy'mox (CN)",
+      "nick": "Xy'mox",
+      "spells": [
+        {
+          "spell_id": 329770,
+          "name": "Root of Extinction (Seeds)",
+          "cooldown": 0.0,
+          "duration": 21.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 325361,
+          "name": "Glyph of Destruction",
+          "cooldown": 0.0,
+          "duration": 6.5,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2406,
+      "name": "Lady Inerva Darkvein",
+      "nick": "Inerva",
+      "spells": [
+        {
+          "spell_id": 342281,
+          "name": "Lingering Anima (Soak)",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2407,
+      "name": "Sire Denathrius",
+      "nick": "Sire Denathrius",
+      "spells": [
+        {
+          "spell_id": 326994,
+          "name": "Blood Price",
+          "cooldown": 0.0,
+          "duration": 3.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 326707,
+          "name": "Cleansing Pain",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 327122,
+          "name": "Ravage",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 328117,
+          "name": "March of the Penitent",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 333932,
+          "name": "Hand of Destruction",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 329943,
+          "name": "Impale",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 332937,
+          "name": "Ravage",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 332619,
+          "name": "Shattering Pain",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2412,
+      "name": "The Council of Blood",
+      "nick": "Council",
+      "spells": [
+        {
+          "spell_id": 330959,
+          "name": "Danse Macabre",
+          "cooldown": 0.0,
+          "duration": 36.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 331634,
+          "name": "Dark Recital",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 347350,
+          "name": "Dancing Fever",
+          "cooldown": 0.0,
+          "duration": 30.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2417,
+      "name": "Stone Legion Generals",
+      "nick": "Stone Legion Generals",
+      "spells": [
+        {
+          "spell_id": 342544,
+          "name": "Pulverizing Meteor",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 334498,
+          "name": "Seismic Upheaval",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 334765,
+          "name": "Heart Rend",
+          "cooldown": 0.0,
+          "duration": 36.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2418,
+      "name": "Huntsman Altimor",
+      "nick": "Huntsman Altimor",
+      "spells": [
+        {
+          "spell_id": 334797,
+          "name": "Rip Soul",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 334942,
+          "name": "Vicious Lunge",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2422,
+      "name": "Kel'Thuzad",
+      "nick": "Kel'Thuzad",
+      "spells": [
+        {
+          "spell_id": 362569,
+          "name": "Frost Blast",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 362565,
+          "name": "Soul Fracture",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 362494,
+          "name": "Howling Blizzard",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2423,
+      "name": "The Tarragrue",
+      "nick": "Tarragrue",
+      "spells": [
+        {
+          "spell_id": 347740,
+          "name": "Hungering Mist",
+          "cooldown": 0.0,
+          "duration": 15.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 347369,
+          "name": "The Jailer's Gaze",
+          "cooldown": 0.0,
+          "duration": 180.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2429,
+      "name": "The Nine",
+      "nick": "The Nine",
+      "spells": [
+        {
+          "spell_id": 350039,
+          "name": "Arthura's Crushing Gaze",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 355294,
+          "name": "Resentment",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 350542,
+          "name": "Fragments of Destiny",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2430,
+      "name": "Painsmith Raznal",
+      "nick": "Painsmith",
+      "spells": [
+        {
+          "spell_id": 359033,
+          "name": "Intermission",
+          "cooldown": 0.0,
+          "duration": 45.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 355571,
+          "name": "Axe",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 348513,
+          "name": "Hammer",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 355787,
+          "name": "Scythe",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2431,
+      "name": "Fatescribe Roh-Kalo",
+      "nick": "Fatescribe",
+      "spells": [
+        {
+          "spell_id": 354265,
+          "name": "Twist Fate",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 351680,
+          "name": "Destiny",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 357739,
+          "name": "Intermisson",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2432,
+      "name": "Remnant of Ner'zhul",
+      "nick": "Ner'zhul",
+      "spells": [
+        {
+          "spell_id": 350469,
+          "name": "Malevolence",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 351066,
+          "name": "Shatter",
+          "cooldown": 0.0,
+          "duration": 2.6,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 351073,
+          "name": "Shatter",
+          "cooldown": 0.0,
+          "duration": 2.6,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 351067,
+          "name": "Shatter",
+          "cooldown": 0.0,
+          "duration": 2.6,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2433,
+      "name": "The Eye of the Jailer",
+      "nick": "The Eye",
+      "spells": [
+        {
+          "spell_id": 349030,
+          "name": "Titanic Death Gaze",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 350828,
+          "name": "Deathlink",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 348974,
+          "name": "Immediate Extermination",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 355240,
+          "name": "Scorn & Ire",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2434,
+      "name": "Soulrender Dormazain",
+      "nick": "Soulrender",
+      "spells": [
+        {
+          "spell_id": 350615,
+          "name": "Adds",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 352933,
+          "name": "Dance",
+          "cooldown": 0.0,
+          "duration": 30.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2435,
+      "name": "Sylvanas Windrunner",
+      "nick": "Sylvanas",
+      "spells": [
+        {
+          "spell_id": 347726,
+          "name": "Veil of Darkness",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 349419,
+          "name": "Chains",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 358704,
+          "name": "Arrow",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 347670,
+          "name": "Shadow Dagger",
+          "cooldown": 0.0,
+          "duration": 9.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 351117,
+          "name": "Crushing Dread",
+          "cooldown": 0.0,
+          "duration": 9.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 348109,
+          "name": "Banshee Wail",
+          "cooldown": 0.0,
+          "duration": 9.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 356021,
+          "name": "Dark Communion (Orbs)",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 351353,
+          "name": "Banshee's Fury",
+          "cooldown": 0.0,
+          "duration": 1.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 354011,
+          "name": "Bane Arrows",
+          "cooldown": 0.0,
+          "duration": 0.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 347609,
+          "name": "Wailing Arrow",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 354068,
+          "name": "Banshee's Fury",
+          "cooldown": 0.0,
+          "duration": 1.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2436,
+      "name": "Guardian of the First Ones",
+      "nick": "Guardian",
+      "spells": [
+        {
+          "spell_id": 352538,
+          "name": "Purging Protocol",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 350732,
+          "name": "Sunder",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 355352,
+          "name": "Obliterate",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 352589,
+          "name": "Meltdown",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2512,
+      "name": "Vigilant Guardian",
+      "nick": "Vigilant Guardian",
+      "spells": [
+        {
+          "spell_id": 364962,
+          "name": "Core Overload",
+          "cooldown": 0.0,
+          "duration": 999.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 367561,
+          "name": "Overlock",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 366692,
+          "name": "Refracted Blast",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 359608,
+          "name": "Deresolution",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 360162,
+          "name": "Split Resolution",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 360412,
+          "name": "Exposed Core",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 366822,
+          "name": "Radiocative Core",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 360202,
+          "name": "Spike of Creation",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 364881,
+          "name": "Matter Dissolution",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 364904,
+          "name": "Anti-Matter",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 364843,
+          "name": "Fractured Core",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 360414,
+          "name": "Pneumatic Impact",
+          "cooldown": 0.0,
+          "duration": 45.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2529,
+      "name": "Halondrus the Reclaimer",
+      "nick": "Halondrus",
+      "spells": [
+        {
+          "spell_id": 361676,
+          "name": "Earthbreaker Missiles",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 360977,
+          "name": "Lightshatter Beam",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 367079,
+          "name": "Seismic Tremors",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 364979,
+          "name": "Shatter",
+          "cooldown": 0.0,
+          "duration": 5.74,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 368684,
+          "name": "Reclaim",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 359236,
+          "name": "Relocation Form",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 361597,
+          "name": "Ephemeral Eruption",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2537,
+      "name": "The Jailer, Zovaal",
+      "nick": "Jailer",
+      "spells": [
+        {
+          "spell_id": 360279,
+          "name": "Rune of Damnation",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 363893,
+          "name": "Martyrdom",
+          "cooldown": 0.0,
+          "duration": 3.6,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 365212,
+          "name": "Chains of Anguish",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 360373,
+          "name": "Unholy Attunement",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 365150,
+          "name": "Rune of Domination",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 365169,
+          "name": "Defile",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 365033,
+          "name": "Desolation",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 362028,
+          "name": "Relentless Domination",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 362617,
+          "name": "Oppression",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 363332,
+          "name": "Unbreaking Grasp",
+          "cooldown": 0.0,
+          "duration": 15.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2539,
+      "name": "Lihuvim, Principal Architect",
+      "nick": "Lihuvim",
+      "spells": [
+        {
+          "spell_id": 364652,
+          "name": "Protoform Cascade (Frontal)",
+          "cooldown": 0.0,
+          "duration": 1.9,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 362601,
+          "name": "Unstable Mote (Mines)",
+          "cooldown": 0.0,
+          "duration": 1.9,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 363088,
+          "name": "Cosmic Shift (Knock)",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 363130,
+          "name": "Synthesize (Intermission start)",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 361200,
+          "name": "Recharge (intermission / mythic)",
+          "cooldown": 0.0,
+          "duration": 20.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2540,
+      "name": "Dausegne, the Fallen Oracle",
+      "nick": "Dausegne",
+      "spells": [
+        {
+          "spell_id": 362805,
+          "name": "Disintegration Halo",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 360960,
+          "name": "Staggering Barrage",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 361513,
+          "name": "Obliteration Arc",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 359483,
+          "name": "Domination Core",
+          "cooldown": 0.0,
+          "duration": 3.4,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 361651,
+          "name": "Siphoned Barrier",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2542,
+      "name": "Skolex, the Insatiable Ravener",
+      "nick": "Skolex",
+      "spells": [
+        {
+          "spell_id": 359770,
+          "name": "Ravening Burrow",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 360451,
+          "name": "Retch",
+          "cooldown": 0.0,
+          "duration": 6.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 359829,
+          "name": "Dust Flail",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 359975,
+          "name": "Riftmaw",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 359979,
+          "name": "Rend",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 364622,
+          "name": "Final Consumption",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2543,
+      "name": "Lords of Dread",
+      "nick": "Lords of Dread",
+      "spells": [
+        {
+          "spell_id": 360300,
+          "name": "Swarm of Decay",
+          "cooldown": 0.0,
+          "duration": 20.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 360145,
+          "name": "Fearful Trepidation",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 360006,
+          "name": "Cloud of Carrion",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 360516,
+          "name": "Among Us",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2544,
+      "name": "Prototype Pantheon",
+      "nick": "Prototype Pantheon",
+      "spells": [
+        {
+          "spell_id": 360295,
+          "name": "Necrotic Ritual",
+          "cooldown": 0.0,
+          "duration": 30.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 360687,
+          "name": "Runecarver's Deathtouch",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 361568,
+          "name": "Withering Seeds",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 361789,
+          "name": "Hand of Destruction",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 365126,
+          "name": "Wracking Pain",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 364941,
+          "name": "Windswept Wings",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2546,
+      "name": "Anduin Wrynn",
+      "nick": "Anduin",
+      "spells": [
+        {
+          "spell_id": 365030,
+          "name": "Wicked Star",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 361989,
+          "name": "Blasphemy",
+          "cooldown": 0.0,
+          "duration": 8.75,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 362405,
+          "name": "Kingsmourne Hungers",
+          "cooldown": 0.0,
+          "duration": 35.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 365295,
+          "name": "Befouled Barrier",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 365958,
+          "name": "Hopelessness",
+          "cooldown": 0.0,
+          "duration": 2.75,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 365805,
+          "name": "Empowered Hopebreaker",
+          "cooldown": 0.0,
+          "duration": 3.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 362505,
+          "name": "Domination's Grasp (Intermission)",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2549,
+      "name": "Rygelon",
+      "nick": "Rygelon",
+      "spells": [
+        {
+          "spell_id": 362275,
+          "name": "Adds",
+          "cooldown": 0.0,
+          "duration": 1.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 364114,
+          "name": "Shatter Sphere",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 363773,
+          "name": "The Singularity",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2553,
+      "name": "Artificer Xy'mox",
+      "nick": "Xy'mox",
+      "spells": [
+        {
+          "spell_id": 362801,
+          "name": "Glyph of Relocation",
+          "cooldown": 0.0,
+          "duration": 5.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 364465,
+          "name": "Forerunner Rings",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 362721,
+          "name": "Dimensional Tear",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 362885,
+          "name": "Stasis Trap",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 367573,
+          "name": "Genesis Bulwark",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2587,
+      "name": "Eranog",
+      "nick": "Eranog",
+      "spells": [
+        {
+          "spell_id": 370615,
+          "name": "Molten Cleave",
+          "cooldown": 0.0,
+          "duration": 3.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 396023,
+          "name": "Incinerating Roar",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 390715,
+          "name": "Flamerift",
+          "cooldown": 0.0,
+          "duration": 7.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 370307,
+          "name": "Collapsing Army",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2590,
+      "name": "The Primal Council",
+      "nick": "The Primal Council",
+      "spells": [
+        {
+          "spell_id": 373059,
+          "name": "Primal Blizzard",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 375331,
+          "name": "Conductive Mark",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 372322,
+          "name": "Earthen Pillar",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 372056,
+          "name": "Crush",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 374038,
+          "name": "Meteor Axes",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2592,
+      "name": "Sennarth, The Cold Breath",
+      "nick": "Sennarth",
+      "spells": [
+        {
+          "spell_id": 371976,
+          "name": "Chilling Blast",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 373817,
+          "name": "Chilling Aura",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 373405,
+          "name": "Gossamer Burst",
+          "cooldown": 0.0,
+          "duration": 9.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 372238,
+          "name": "Call Spiderlings",
+          "cooldown": 0.0,
+          "duration": 9.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 372082,
+          "name": "Enveloping Webs",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 372648,
+          "name": "Pervasive Cold",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 373027,
+          "name": "Suffocating Webs",
+          "cooldown": 0.0,
+          "duration": 9.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2605,
+      "name": "Kurog Grimtotem",
+      "nick": "Kurog",
+      "spells": [
+        {
+          "spell_id": 382563,
+          "name": "Magma Burst",
+          "cooldown": 0.0,
+          "duration": 11.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 374022,
+          "name": "Searing Carnage",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 373678,
+          "name": "Biting Chill",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 391019,
+          "name": "Frigid Torrent",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 372456,
+          "name": "Absolute Zero",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 390796,
+          "name": "Erupting Bedrock",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 391055,
+          "name": "Enveloping Earth",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 374691,
+          "name": "Seismic Rupture",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 391268,
+          "name": "Earth Smite",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 390920,
+          "name": "Shocking Burst",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 373487,
+          "name": "Lightning Crash",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 374215,
+          "name": "Thunder Strike",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 374779,
+          "name": "Primal Barrier",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2607,
+      "name": "Raszageth the Storm-Eater",
+      "nick": "Raszageth",
+      "spells": [
+        {
+          "spell_id": 381615,
+          "name": "Static Charge / Fulminating Charge",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 377612,
+          "name": "Hurricane Wing / Tempest Wing",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 388643,
+          "name": "Volatile Current",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 377658,
+          "name": "Electrified Jaws",
+          "cooldown": 0.0,
+          "duration": 33.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 385068,
+          "name": "Ball Lightning (Dodge)",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 389870,
+          "name": "Storm Break (Teleport)",
+          "cooldown": 0.0,
+          "duration": 3.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 386410,
+          "name": "Thunderous Blast",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 399713,
+          "name": "Magnetic Charge",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 388691,
+          "name": "Stormsurge (Shield)",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2614,
+      "name": "Broodkeeper Diurna",
+      "nick": "Diurna",
+      "spells": [
+        {
+          "spell_id": 375871,
+          "name": "Wildfire",
+          "cooldown": 0.0,
+          "duration": 10.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 388716,
+          "name": "Icy Shroud",
+          "cooldown": 0.0,
+          "duration": 6.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 380175,
+          "name": "Greatstaff of the Broodkeeper",
+          "cooldown": 0.0,
+          "duration": 9.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 396269,
+          "name": "Mortal Stoneslam",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 375829,
+          "name": "Clutchwatcher's Rage",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 375879,
+          "name": "Broodkeeper's Fury",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2635,
+      "name": "Dathea, Ascended",
+      "nick": "Dathea",
+      "spells": [
+        {
+          "spell_id": 391600,
+          "name": "Conductive Mark",
+          "cooldown": 0.0,
+          "duration": 15.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 388410,
+          "name": "Crosswinds",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 376943,
+          "name": "Cyclone",
+          "cooldown": 0.0,
+          "duration": 14.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 387849,
+          "name": "Coalescing Storm",
+          "cooldown": 0.0,
+          "duration": 50.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 391382,
+          "name": "Blowback",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 375580,
+          "name": "Zephyr Slam",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2639,
+      "name": "Terros",
+      "nick": "Terros",
+      "spells": [
+        {
+          "spell_id": 376279,
+          "name": "Concussive Slam",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 380487,
+          "name": "Rock Blast",
+          "cooldown": 0.0,
+          "duration": 5.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 383073,
+          "name": "Shattering Impact",
+          "cooldown": 0.0,
+          "duration": 3.25,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 377166,
+          "name": "Resonating Annihilation",
+          "cooldown": 0.0,
+          "duration": 6.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 396351,
+          "name": "Infused Fallout",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2677,
+      "name": "Fyrakk the Blazing",
+      "nick": "Fyrakk",
+      "spells": [
+        {
+          "spell_id": 417455,
+          "name": "Dream Rend",
+          "cooldown": 0.0,
+          "duration": 10.43,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 419506,
+          "name": "Firestorm",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 419123,
+          "name": "Flamefall",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 426368,
+          "name": "Darkflame Cleave",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 417431,
+          "name": "Fyr'alath's Bite",
+          "cooldown": 0.0,
+          "duration": 2.43,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 421455,
+          "name": "Burning Scales",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 422837,
+          "name": "Apocalypse Roar",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 410223,
+          "name": "Shadowflame Breath",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 425492,
+          "name": "Infernal Maw",
+          "cooldown": 0.0,
+          "duration": 1.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 421922,
+          "name": "Corrupt",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2680,
+      "name": "Rashok, the Elder",
+      "nick": "Rashok",
+      "spells": [
+        {
+          "spell_id": 405821,
+          "name": "Charged Smash",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 400777,
+          "name": "Charged Smash",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 407641,
+          "name": "Wrath of Djaruun",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 401419,
+          "name": "Elder's Conduit",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2682,
+      "name": "Assault of the Zaqali",
+      "nick": "Assault of the Zaqali",
+      "spells": [
+        {
+          "spell_id": 408959,
+          "name": "Devastating Leap",
+          "cooldown": 0.0,
+          "duration": 4.3,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 410516,
+          "name": "Catastrophic Slam",
+          "cooldown": 0.0,
+          "duration": 4.3,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 411230,
+          "name": "Ignara's Flame",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 409359,
+          "name": "Desperate Immolation",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2683,
+      "name": "Magmorax",
+      "nick": "Magmorax",
+      "spells": [
+        {
+          "spell_id": 402989,
+          "name": "Molten Spittle",
+          "cooldown": 0.0,
+          "duration": 7.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 403740,
+          "name": "Igniting Roar",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 403671,
+          "name": "Overpowering Stomp",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 404846,
+          "name": "Incinerating Maws",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2684,
+      "name": "Echo of Neltharion",
+      "nick": "Neltharion",
+      "spells": [
+        {
+          "spell_id": 407207,
+          "name": "Rushing Darkness",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 410968,
+          "name": "Volcanic Heart",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 403272,
+          "name": "Echoing Fissure",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 406222,
+          "name": "Calamitous Strike",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 403057,
+          "name": "Surrender to Corruption",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 405433,
+          "name": "Umbral Annihilation",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 407790,
+          "name": "Sunder Shadow",
+          "cooldown": 0.0,
+          "duration": 6.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 407917,
+          "name": "Ebon Destruction",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2685,
+      "name": "Scalecommander Sarkareth",
+      "nick": "Sarkareth",
+      "spells": [
+        {
+          "spell_id": 402050,
+          "name": "Searing Breath",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 401810,
+          "name": "Glittering Surge",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 401383,
+          "name": "Oppressing Howl",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 401325,
+          "name": "Burning Claws",
+          "cooldown": 0.0,
+          "duration": 27.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 404456,
+          "name": "Abyssal Breath",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 407496,
+          "name": "Infinite Duress (Knock)",
+          "cooldown": 0.0,
+          "duration": 11.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 411236,
+          "name": "Void Claws",
+          "cooldown": 0.0,
+          "duration": 28.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 403517,
+          "name": "Embrace of Nothingness (Meteor)",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 403625,
+          "name": "Scouring Eternity (Hide)",
+          "cooldown": 0.0,
+          "duration": 5.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 403741,
+          "name": "Cosmic Ascension",
+          "cooldown": 0.0,
+          "duration": 5.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 408422,
+          "name": "Void Slash",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2687,
+      "name": "The Amalgamation Chamber",
+      "nick": "The Amalgamation Chamber",
+      "spells": [
+        {
+          "spell_id": 405016,
+          "name": "Umbral Detonation",
+          "cooldown": 6.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 403459,
+          "name": "Coalescing Void",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 403699,
+          "name": "Shadow Spike",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 404732,
+          "name": "Fiery Meteor",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 404896,
+          "name": "Swirling Flame",
+          "cooldown": 5.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 403203,
+          "name": "Flame Slash",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 406780,
+          "name": "Phase 2",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 408193,
+          "name": "Convergent Eruption",
+          "cooldown": 0.0,
+          "duration": 1.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 405437,
+          "name": "Gloom Conflagration",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 405914,
+          "name": "Withering Vulnerability",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2688,
+      "name": "Kazzara, the Hellforged",
+      "nick": "Kazzara",
+      "spells": [
+        {
+          "spell_id": 407196,
+          "name": "Dread Rifts",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 407069,
+          "name": "Rays of Anguish",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 403326,
+          "name": "Wings of Extinction",
+          "cooldown": 0.0,
+          "duration": 20.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 401316,
+          "name": "Hellsteel Carnage",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 404744,
+          "name": "Terror Claws",
+          "cooldown": 0.0,
+          "duration": 25.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2689,
+      "name": "The Vigilant Steward, Zskarn",
+      "nick": "Zskarn",
+      "spells": [
+        {
+          "spell_id": 403978,
+          "name": "Blast Wave",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 406678,
+          "name": "Tactical Destruction",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 405812,
+          "name": "Animate Golems",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 406725,
+          "name": "Shrapnel Bomb",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2693,
+      "name": "The Forgotten Experiments",
+      "nick": "The Forgotten Experiments",
+      "spells": [
+        {
+          "spell_id": 406358,
+          "name": "Rending Charge",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 404713,
+          "name": "Bellowing Roar",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 405042,
+          "name": "Unstable Essence",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 407775,
+          "name": "Violent Eruption",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 407552,
+          "name": "Temporal Anomaly",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 406227,
+          "name": "Deep Breath",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2708,
+      "name": "Nymue, Weaver of the Cycle",
+      "nick": "Nymue",
+      "spells": [
+        {
+          "spell_id": 420907,
+          "name": "Viridian Rain",
+          "cooldown": 0.0,
+          "duration": 7.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 426519,
+          "name": "Weaver's Burden",
+          "cooldown": 0.0,
+          "duration": 14.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 413443,
+          "name": "Life Ward",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2709,
+      "name": "Igira the Cruel",
+      "nick": "Igira",
+      "spells": [
+        {
+          "spell_id": 422776,
+          "name": "Marked for Torment",
+          "cooldown": 0.0,
+          "duration": 1.6,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 416048,
+          "name": "Umbral Destruction",
+          "cooldown": 0.0,
+          "duration": 4.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 418531,
+          "name": "Smashing Viscera",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 415624,
+          "name": "Heart Stopper",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2728,
+      "name": "Council of Dreams",
+      "nick": "Council of Dreams",
+      "spells": [
+        {
+          "spell_id": 420525,
+          "name": "Blind Rage",
+          "cooldown": 0.0,
+          "duration": 12.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 420947,
+          "name": "Barreling Charge",
+          "cooldown": 0.0,
+          "duration": 12.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 421020,
+          "name": "Agonizing Claws",
+          "cooldown": 0.0,
+          "duration": 18.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 421292,
+          "name": "Constricting Thicket",
+          "cooldown": 0.0,
+          "duration": 22.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 421029,
+          "name": "Song of the Dragon",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 418757,
+          "name": "Polymorph Bomb",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2731,
+      "name": "Larodar, Keeper of the Flame",
+      "nick": "Larodar",
+      "spells": [
+        {
+          "spell_id": 417634,
+          "name": "Raging Inferno",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 425025,
+          "name": "Furious Outburst",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 421316,
+          "name": "Consuming Flame",
+          "cooldown": 0.0,
+          "duration": 18.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 427319,
+          "name": "Flash Fire",
+          "cooldown": 0.0,
+          "duration": 18.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 429973,
+          "name": "Smoldering Backdraft",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2737,
+      "name": "Volcoross",
+      "nick": "Volcoross",
+      "spells": [
+        {
+          "spell_id": 421284,
+          "name": "Coiling Flames",
+          "cooldown": 0.0,
+          "duration": 1.6,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 420933,
+          "name": "Flood of the Firelands",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 423117,
+          "name": "Cataclysm Jaws",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2786,
+      "name": "Tindral Sageswift, Seer of the Flame",
+      "nick": "Tindral",
+      "spells": [
+        {
+          "spell_id": 423265,
+          "name": "Flaming Germination",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 421398,
+          "name": "Fire Beam",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 424495,
+          "name": "Mass Entanglement",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 424581,
+          "name": "Fiery Growth",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 420236,
+          "name": "Falling Star",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 423260,
+          "name": "Blazing Mushroom",
+          "cooldown": 0.0,
+          "duration": 10.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 421603,
+          "name": "Incarnation: Owl of the Flame",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 424140,
+          "name": "Supernova",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2820,
+      "name": "Gnarlroot",
+      "nick": "Gnarlroot",
+      "spells": [
+        {
+          "spell_id": 422026,
+          "name": "Tortured Scream",
+          "cooldown": 0.0,
+          "duration": 12.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 424352,
+          "name": "Dreadfire Barrage",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 421013,
+          "name": "Doom Cultivation",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 421840,
+          "name": "Uprooted Agony",
+          "cooldown": 0.0,
+          "duration": 20.0,
+          "event_type": "applydebuff"
+        }
+      ]
+    },
+    {
+      "id": 2824,
+      "name": "Smolderon",
+      "nick": "Smolderon",
+      "spells": [
+        {
+          "spell_id": 421343,
+          "name": "Brand of Damnation",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 421455,
+          "name": "Overheated",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 422172,
+          "name": "World In Flames",
+          "cooldown": 0.0,
+          "duration": 30.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2898,
+      "name": "Sikran, Captain of the Sureki",
+      "nick": "Sikran",
+      "spells": [
+        {
+          "spell_id": 433519,
+          "name": "Phase Blades",
+          "cooldown": 20.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 442428,
+          "name": "Decimate",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 456420,
+          "name": "Shattering Sweep",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 435403,
+          "name": "Phase Lunge",
+          "cooldown": 0.0,
+          "duration": 30.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2902,
+      "name": "Ulgrax the Devourer",
+      "nick": "Ulgrax",
+      "spells": [
+        {
+          "spell_id": 435136,
+          "name": "Venomous Lash",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 435138,
+          "name": "Digestive Acid",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 434803,
+          "name": "Carnivorous Contest",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 434697,
+          "name": "Brutal Crush",
+          "cooldown": 0.0,
+          "duration": 19.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 445123,
+          "name": "Hulking Crash",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 436203,
+          "name": "Juggernaut Charge",
+          "cooldown": 0.0,
+          "duration": 3.7,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 438012,
+          "name": "Hungering Bellows",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 445052,
+          "name": "Chittering Swarm",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 2917,
+      "name": "The Bloodbound Horror",
+      "nick": "Bloodbound Horror",
+      "spells": [
+        {
+          "spell_id": 444363,
+          "name": "Gruesome Disgorge",
+          "cooldown": 40.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 442530,
+          "name": "Goresplatter",
+          "cooldown": 10.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2918,
+      "name": "Rasha'nan",
+      "nick": "Rasha'nan",
+      "spells": [
+        {
+          "spell_id": 439811,
+          "name": "Erosive Spray",
+          "cooldown": 24.0,
+          "duration": 5.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 439784,
+          "name": "Spinneret's Strands",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 439789,
+          "name": "Rolling Acid",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 455373,
+          "name": "Infested Spawn",
+          "cooldown": 2.5,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 452806,
+          "name": "Acidic Eruption",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "begincast"
+        },
+        {
+          "spell_id": 439795,
+          "name": "Web Reave",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 444687,
+          "name": "Savage Assault",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2919,
+      "name": "Broodtwister Ovi'nax",
+      "nick": "Ovi'nax",
+      "spells": [
+        {
+          "spell_id": 442432,
+          "name": "Ingest Black Blood",
+          "cooldown": 0.0,
+          "duration": 16.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 442526,
+          "name": "Experimental Dosage",
+          "cooldown": 0.0,
+          "duration": 7.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 446344,
+          "name": "Sticky Web",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 443003,
+          "name": "Volatile Concoction",
+          "cooldown": 0.0,
+          "duration": 9.5,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2920,
+      "name": "Nexus-Princess Ky'veza",
+      "nick": "Ky'veza",
+      "spells": [
+        {
+          "spell_id": 436971,
+          "name": "Assassination",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 438245,
+          "name": "Twilight Massacre",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 435405,
+          "name": "Starless Night",
+          "cooldown": 0.0,
+          "duration": 29.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 437620,
+          "name": "Nether Rift",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 440377,
+          "name": "Void Shredders",
+          "cooldown": 0.0,
+          "duration": 35.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 2921,
+      "name": "The Silken Court",
+      "nick": "Silken Court",
+      "spells": [
+        {
+          "spell_id": 441791,
+          "name": "Burrowed Eruption",
+          "cooldown": 12.0,
+          "duration": 1.8,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 442994,
+          "name": "Unleashed Swarm",
+          "cooldown": 0.0,
+          "duration": 9.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 438677,
+          "name": "Stinging Swarm",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 438343,
+          "name": "Venomous Rain",
+          "cooldown": 10.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 441626,
+          "name": "Web Vortex",
+          "cooldown": 16.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 440179,
+          "name": "Entangled",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 451277,
+          "name": "Spike Storm",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 450980,
+          "name": "Shatter Existence",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 456245,
+          "name": "Stinging Delirium",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "applydebuff"
+        }
+      ]
+    },
+    {
+      "id": 2922,
+      "name": "Queen Ansurek",
+      "nick": "Ansurek",
+      "spells": [
+        {
+          "spell_id": 437592,
+          "name": "Reactive Toxin",
+          "cooldown": 5.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 443325,
+          "name": "Infest",
+          "cooldown": 4.5,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 439814,
+          "name": "Silken Tomb",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 437093,
+          "name": "Feast",
+          "cooldown": 0.0,
+          "duration": 1.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 440899,
+          "name": "Liquefy",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 447411,
+          "name": "Wrest",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 443336,
+          "name": "Gorge",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 444829,
+          "name": "Queen's Summons",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 443888,
+          "name": "Abyssal Infusion",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 445422,
+          "name": "Frothing Gluttony",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 447965,
+          "name": "Gloom Touch",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 3009,
+      "name": "Vexie and the Geargrinders",
+      "nick": "Vexie",
+      "spells": [
+        {
+          "spell_id": 459671,
+          "name": "Spew Oil",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 468207,
+          "name": "Incendiary Fire",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 459943,
+          "name": "Call Bikers",
+          "cooldown": 0.0,
+          "duration": 1.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 459627,
+          "name": "Tank Buster",
+          "cooldown": 25.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 468149,
+          "name": "Exhaust Fumes",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 460603,
+          "name": "Mechanical Breakdown",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applydebuff"
+        }
+      ]
+    },
+    {
+      "id": 3010,
+      "name": "Cauldron of Carnage",
+      "nick": "Cauldron",
+      "spells": [
+        {
+          "spell_id": 463900,
+          "name": "Thunderdrum Salvo",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 463798,
+          "name": "Lightning Bash",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 473650,
+          "name": "Scrapbomb",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 472233,
+          "name": "Blastburn Roarcannon",
+          "cooldown": 3.0,
+          "duration": 3.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1214190,
+          "name": "Eruption Stomp",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 465872,
+          "name": "Colossal Clash",
+          "cooldown": 0.0,
+          "duration": 20.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 3011,
+      "name": "Rik Reverb",
+      "nick": "Rik",
+      "spells": [
+        {
+          "spell_id": 473748,
+          "name": "Amplification!",
+          "cooldown": 0.0,
+          "duration": 3.3,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 467606,
+          "name": "Sound Cannon",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 466961,
+          "name": "Faulty Zap",
+          "cooldown": 12.0,
+          "duration": 2.125,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1214688,
+          "name": "Sparkblast Ignition",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "summon"
+        },
+        {
+          "spell_id": 464584,
+          "name": "Sound Cloud",
+          "cooldown": 0.0,
+          "duration": 37.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 473260,
+          "name": "Blaring Drop",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3012,
+      "name": "Stix Bunkjunker",
+      "nick": "Stix",
+      "spells": [
+        {
+          "spell_id": 464399,
+          "name": "Electromagnetic Sorting",
+          "cooldown": 5.0,
+          "duration": 1.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 464149,
+          "name": "Incinerator",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 464112,
+          "name": "Demolish",
+          "cooldown": 50.0,
+          "duration": 1.25,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1217954,
+          "name": "Meltdown",
+          "cooldown": 3.0,
+          "duration": 1.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 467117,
+          "name": "Overdrive / Trash Compactor",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3013,
+      "name": "Sprocketmonger Lockenstock",
+      "nick": "Lockenstock",
+      "spells": [
+        {
+          "spell_id": 465232,
+          "name": "Sonic Ba-Boom",
+          "cooldown": 10.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1217231,
+          "name": "Foot-Blasters",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1218418,
+          "name": "Wire Transfer",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1216508,
+          "name": "Screw Up",
+          "cooldown": 4.5,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 473276,
+          "name": "Activate Inventions!",
+          "cooldown": 0.0,
+          "duration": 1.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1214872,
+          "name": "Pyro Party Pack",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1217355,
+          "name": "Polarization Generator",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 466860,
+          "name": "Bleeding Edge",
+          "cooldown": 0.0,
+          "duration": 20.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3014,
+      "name": "One-Armed Bandit",
+      "nick": "Bandit",
+      "spells": [
+        {
+          "spell_id": 460181,
+          "name": "Pay-Line",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 469993,
+          "name": "Foul Exhaust",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 460472,
+          "name": "The Big Hit",
+          "cooldown": 30.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 461060,
+          "name": "Spin To Win!",
+          "cooldown": 30.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 464772,
+          "name": "Reward",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3015,
+      "name": "Mug'Zee, Heads of Security",
+      "nick": "Mug'Zee",
+      "spells": [
+        {
+          "spell_id": 472631,
+          "name": "Earthshaker Gaol",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 466509,
+          "name": "Stormfury Finger Gun",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 466470,
+          "name": "Frostshatter Boots",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 467201,
+          "name": "Molten Gold Knuckles",
+          "cooldown": 10.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 423265,
+          "name": "Uncontrolled Destruction",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 466539,
+          "name": "Unstable Crawler Mines",
+          "cooldown": 0.0,
+          "duration": 3.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 467379,
+          "name": "Goblin-guided Rocket",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 466545,
+          "name": "Spray and Pray",
+          "cooldown": 0.0,
+          "duration": 6.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1223085,
+          "name": "Double Whammy Shot",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 0,
+          "name": "Explosive Payload",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1215488,
+          "name": "Disintegration Beam",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3016,
+      "name": "Chrome King Gallywix",
+      "nick": "Gallywix",
+      "spells": [
+        {
+          "spell_id": 466340,
+          "name": "Scatterblast Canisters",
+          "cooldown": 30.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 465952,
+          "name": "Big Bad Buncha Bombs",
+          "cooldown": 4.5,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 466751,
+          "name": "Venting Heat",
+          "cooldown": 4.0,
+          "duration": 1.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1217953,
+          "name": "Giga Blast",
+          "cooldown": 10.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 466342,
+          "name": "Tick-Tock Canisters",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 467182,
+          "name": "Suppression",
+          "cooldown": 0.0,
+          "duration": 4.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 466958,
+          "name": "Molten Gold Knuckles",
+          "cooldown": 22.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1214590,
+          "name": "TOTAL DESTRUCTION!!!",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 1226891,
+          "name": "Circuit Reboot",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 469293,
+          "name": "Giga Coils",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 3122,
+      "name": "The Soul Hunters",
+      "nick": "Soul Hunters",
+      "spells": [
+        {
+          "spell_id": 1242259,
+          "name": "Spirit Bomb",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1227355,
+          "name": "Voidstep",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1227809,
+          "name": "The Hunt",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1240891,
+          "name": "Sigil of Chains",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1222232,
+          "name": "Devourer's Ire",
+          "cooldown": 0.0,
+          "duration": 13.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1241833,
+          "name": "Fracture",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1218103,
+          "name": "Eye Beam",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1233093,
+          "name": "Collapsing Star",
+          "cooldown": 0.0,
+          "duration": 25.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1233863,
+          "name": "Fel Rush",
+          "cooldown": 0.0,
+          "duration": 24.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1227117,
+          "name": "Fel Devastation",
+          "cooldown": 0.0,
+          "duration": 4.5,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3129,
+      "name": "Plexus Sentinel",
+      "nick": "Plexus Sentinel",
+      "spells": [
+        {
+          "spell_id": 1219450,
+          "name": "Manifest Matrices",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1219263,
+          "name": "Obliteration Arcanocannon",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1219531,
+          "name": "Eradicating Salvo",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1241303,
+          "name": "Protocol: Purge",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 3130,
+      "name": "Soulbinder Naazindhri",
+      "nick": "Naazindhri",
+      "spells": [
+        {
+          "spell_id": 1225582,
+          "name": "Soul Calling",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1225616,
+          "name": "Soulfire Convergence",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1227276,
+          "name": "Soulfray Annihilation",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1242088,
+          "name": "Arcane Expulsion",
+          "cooldown": 15.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1241100,
+          "name": "Mystic Lash",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3131,
+      "name": "Loom'ithar",
+      "nick": "Loom'ithar",
+      "spells": [
+        {
+          "spell_id": 1226395,
+          "name": "Overinfusion Burst",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1237272,
+          "name": "Lair Weaving",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1227263,
+          "name": "Piercing Strand",
+          "cooldown": 45.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1227226,
+          "name": "Writhing Wave",
+          "cooldown": 25.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1227782,
+          "name": "Arcane Outrage",
+          "cooldown": 4.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3132,
+      "name": "Forgeweaver Araz",
+      "nick": "Araz",
+      "spells": [
+        {
+          "spell_id": 1231720,
+          "name": "Invoke Collector",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1228213,
+          "name": "Astral Harvest",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1228216,
+          "name": "Astral Harvest",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1228502,
+          "name": "Overwhelming Power",
+          "cooldown": 46.0,
+          "duration": 1.2,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1227631,
+          "name": "Arcane Expulsion",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1233415,
+          "name": "Mana Splinter",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1243887,
+          "name": "Void Harvest",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1232221,
+          "name": "Death Throes",
+          "cooldown": 0.0,
+          "duration": 3.5,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3133,
+      "name": "Fractillus",
+      "nick": "Fractillus",
+      "spells": [
+        {
+          "spell_id": 1233416,
+          "name": "Crystalline Shockwave",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1220394,
+          "name": "Shattering Backhand",
+          "cooldown": 0.0,
+          "duration": 2.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1231871,
+          "name": "Shockwave Slam",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3134,
+      "name": "Nexus-King Salhadaar",
+      "nick": "Salhadaar",
+      "spells": [
+        {
+          "spell_id": 1224864,
+          "name": "Behead",
+          "cooldown": 0.0,
+          "duration": 24.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1227549,
+          "name": "Banishment",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1224787,
+          "name": "Conquer",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1224812,
+          "name": "Vanquish",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1227734,
+          "name": "Coalesce Voidwing",
+          "cooldown": 0.0,
+          "duration": 6.2,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1228115,
+          "name": "Netherbreaker",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1228163,
+          "name": "Dimension Breath",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1234529,
+          "name": "Cosmic Maw",
+          "cooldown": 0.0,
+          "duration": 1.25,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1228075,
+          "name": "Nexus Beams",
+          "cooldown": 0.0,
+          "duration": 7.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1230263,
+          "name": "Netherblast",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1232399,
+          "name": "Dread Mortar",
+          "cooldown": 0.0,
+          "duration": 4.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1228053,
+          "name": "Reap",
+          "cooldown": 0.0,
+          "duration": 1.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1226648,
+          "name": "Galactic Smash",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1226024,
+          "name": "Starkiller Swing",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1228265,
+          "name": "King's Hunger",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 3135,
+      "name": "Dimensius, the All-Devouring",
+      "nick": "Dimensius",
+      "spells": [
+        {
+          "spell_id": 1229038,
+          "name": "Devour",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1230979,
+          "name": "Dark Matter",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1230087,
+          "name": "Massive Smash",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1238765,
+          "name": "Extinction",
+          "cooldown": 0.0,
+          "duration": 8.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1239262,
+          "name": "Conqueror's Cross",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1237694,
+          "name": "Mass Ejection",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1231716,
+          "name": "Extinguish The Stars",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1234044,
+          "name": "Darkened Sky",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1232973,
+          "name": "Supernova",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1234263,
+          "name": "Cosmic Collapse",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3176,
+      "name": "Imperator Averzian",
+      "nick": "Averzian",
+      "spells": [
+        {
+          "spell_id": 1251361,
+          "name": "Shadow's Advance",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1249265,
+          "name": "Umbral Collapse",
+          "cooldown": 0.0,
+          "duration": 5.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1258880,
+          "name": "Void Fall",
+          "cooldown": 0.0,
+          "duration": 20.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1260712,
+          "name": "Oblivion's Wrath",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3177,
+      "name": "Vorasius",
+      "nick": "Vorasius",
+      "spells": [
+        {
+          "spell_id": 1241768,
+          "name": "Shadowclaw Slam",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1256855,
+          "name": "Void Breath",
+          "cooldown": 0.0,
+          "duration": 15.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1260052,
+          "name": "Primordial Roar",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1254199,
+          "name": "Parasite Expulsion",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3178,
+      "name": "Vaelgor & Ezzorak",
+      "nick": "Vaelgor",
+      "spells": [
+        {
+          "spell_id": 1262623,
+          "name": "Nullbeam",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1244917,
+          "name": "Void Howl",
+          "cooldown": 0.0,
+          "duration": 2.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1244221,
+          "name": "Dread Breath",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1245391,
+          "name": "Gloom",
+          "cooldown": 0.0,
+          "duration": 4.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1265131,
+          "name": "Vaelwing",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1245645,
+          "name": "Rakfang",
+          "cooldown": 0.0,
+          "duration": 1.5,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1248847,
+          "name": "Radiant Barrier",
+          "cooldown": 0.0,
+          "duration": 25.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1249748,
+          "name": "Midnight Flames",
+          "cooldown": 0.0,
+          "duration": 20.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3179,
+      "name": "Fallen-King Salhadaar",
+      "nick": "Salhadaar",
+      "spells": [
+        {
+          "spell_id": 1247738,
+          "name": "Void Convergence",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1246175,
+          "name": "Entropic Unraveling",
+          "cooldown": 0.0,
+          "duration": 20.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1253032,
+          "name": "Shattering Twilight",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1254081,
+          "name": "Fractured Projection",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1248697,
+          "name": "Despotic Command",
+          "cooldown": 0.0,
+          "duration": 14.0,
+          "event_type": "cast"
+        }
+      ]
+    },
+    {
+      "id": 3180,
+      "name": "Lightblinded Vanguard",
+      "nick": "Vanguard",
+      "spells": [
+        {
+          "spell_id": 1248449,
+          "name": "Aura of Wrath",
+          "cooldown": 0.0,
+          "duration": 15.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1248994,
+          "name": "Execution Sentence",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1248644,
+          "name": "Divine Toll",
+          "cooldown": 0.0,
+          "duration": 20.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1248451,
+          "name": "Aura of Peace",
+          "cooldown": 0.0,
+          "duration": 25.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1248710,
+          "name": "Tyr's Wrath",
+          "cooldown": 0.0,
+          "duration": 20.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1255738,
+          "name": "Searing Radiance",
+          "cooldown": 0.0,
+          "duration": 15.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1246487,
+          "name": "Avenger's Shield",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1251857,
+          "name": "Judgment",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1246736,
+          "name": "Judgment",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1246165,
+          "name": "Aura of Devotion",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        },
+        {
+          "spell_id": 1248674,
+          "name": "Sacred Shield",
+          "cooldown": 0.0,
+          "duration": 0.0,
+          "event_type": "applybuff"
+        }
+      ]
+    },
+    {
+      "id": 3181,
+      "name": "Crown of the Cosmos",
+      "nick": "Crown",
+      "spells": []
+    },
+    {
+      "id": 3182,
+      "name": "Belo'ren, Child of Al'ar",
+      "nick": "Belo'ren",
+      "spells": [
+        {
+          "spell_id": 1242515,
+          "name": "Voidlight Convergence",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1241291,
+          "name": "Light Dive",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1242260,
+          "name": "Infused Quills",
+          "cooldown": 0.0,
+          "duration": 6.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1246709,
+          "name": "Death Drop + Rebirth",
+          "cooldown": 0.0,
+          "duration": 30.5,
+          "event_type": "begincast"
+        }
+      ]
+    },
+    {
+      "id": 3183,
+      "name": "L'ura",
+      "nick": "L'ura",
+      "spells": []
+    },
+    {
+      "id": 3306,
+      "name": "Chimaerus",
+      "nick": "Chimaerus",
+      "spells": [
+        {
+          "spell_id": 1262289,
+          "name": "Alndust Upheaval",
+          "cooldown": 0.0,
+          "duration": 5.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1258610,
+          "name": "Rift Emergence",
+          "cooldown": 0.0,
+          "duration": 3.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1257087,
+          "name": "Consuming Miasma",
+          "cooldown": 0.0,
+          "duration": 8.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1246653,
+          "name": "Caustic Phlegm",
+          "cooldown": 0.0,
+          "duration": 12.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1245396,
+          "name": "Consume",
+          "cooldown": 0.0,
+          "duration": 10.0,
+          "event_type": "cast"
+        },
+        {
+          "spell_id": 1245404,
+          "name": "Ravenous Dive",
+          "cooldown": 0.0,
+          "duration": 3.5,
+          "event_type": "cast"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+    "user_preferences": {
+        "language": "English for all text, Chinese+English for talent/spell names",
+        "main_spec": "balance-druid",
+        "current_progression": "Heroic Voidspire (Vaelgor & Ezzorak)",
+        "terminology": "Use '\u9e1f\u5fb7' not '\u9e21\u5fb7' for Balance Druid"
+    },
+    "rate_limit": {
+        "total_points_per_hour": 3600,
+        "typical_costs": {
+            "get_encounters": "~1 point",
+            "get_top_builds": "~2 points",
+            "get_spec_info": "0 points (local data)",
+            "get_cooldown_timelines": "~150 points (50 reports \u00d7 3 queries)",
+            "get_rotation_profile": "~80 points (5 players \u00d7 16 queries)",
+            "get_defensive_patterns": "~60 points (10 players \u00d7 6 queries)",
+            "analyze_player_log": "~5-7 points + benchmark cost if not cached",
+            "get_example_logs": "~1 point",
+            "get_coaching_context": "0 points (local data)"
+        },
+        "advice": "Benchmarks cache for 6 hours. First query per spec/boss is expensive, subsequent ones are free. Budget ~300 points per coaching session."
+    },
+    "coaching_tips": {
+        "workflow": "1) get_coaching_context first, 2) get_encounters to find boss IDs, 3) benchmarks (builds/rotation/timelines), 4) analyze_player_log for coaching",
+        "rotation_notes": "get_rotation_profile samples only 5 players \u2014 treat as directional, not definitive. Spell IDs can differ between reports for same ability.",
+        "timeline_notes": "get_cooldown_timelines uses sample_size=50 default. Use 20-25 to conserve rate limit for casual coaching.",
+        "analysis_notes": "analyze_player_log auto-detects encounter_id from the report. Benchmarks are fetched in parallel and cached.",
+        "known_limitations": [
+            "Spell name resolution relies on masterData.abilities per-report \u2014 some proc effects may show as IDs",
+            "Build comparison uses WCL talent entry IDs \u2014 ~93.6% coverage, 6.4% are dead talents",
+            "Boss phases config is static/approximate \u2014 not derived from actual log phase transitions",
+            "Buff uptimes include all buffs on the player (including externals from healers)"
+        ]
+    },
+    "tool_count": 9,
+    "phase": "Phase 5 complete"
+}

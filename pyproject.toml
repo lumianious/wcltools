@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wow-mcp-server"
+version = "0.1.0"
+description = "WoW raid coaching MCP server backed by WarcraftLogs API"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.25,<2",
+    "httpx",
+    "pydantic>=2.0",
+    "python-dotenv",
+]
+
+[project.scripts]
+wow-mcp = "src.server:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-mock",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+pythonpath = ["."]

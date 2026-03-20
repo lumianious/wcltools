@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "source": "Manual — based on guide data and log analysis",
+    "last_updated": "2026-03-20",
+    "notes": "Phase timings are approximate and will be tuned with real log data. Times in seconds from pull."
+  },
+  "encounters": {
+    "3178": {
+      "name": "Vaelgor & Ezzorak",
+      "phases": [
+        {"name": "Phase 1", "typical_start": 0, "typical_end": 95},
+        {"name": "Intermission", "typical_start": 95, "typical_end": 115},
+        {"name": "Phase 2", "typical_start": 115, "typical_end": 210}
+      ]
+    },
+    "3009": {
+      "name": "Vexie and the Geargrinders",
+      "phases": [
+        {"name": "Phase 1", "typical_start": 0, "typical_end": 100},
+        {"name": "Intermission", "typical_start": 100, "typical_end": 120},
+        {"name": "Phase 2", "typical_start": 120, "typical_end": 220}
+      ]
+    },
+    "3181": {
+      "name": "Crown of the Cosmos",
+      "phases": [
+        {"name": "Phase 1", "typical_start": 0, "typical_end": 180}
+      ]
+    },
+    "3001": {
+      "name": "Vorasius",
+      "phases": [
+        {"name": "Phase 1", "typical_start": 0, "typical_end": 90},
+        {"name": "Intermission 1", "typical_start": 90, "typical_end": 110},
+        {"name": "Phase 2", "typical_start": 110, "typical_end": 200},
+        {"name": "Intermission 2", "typical_start": 200, "typical_end": 220},
+        {"name": "Phase 3", "typical_start": 220, "typical_end": 330}
+      ]
+    },
+    "3002": {
+      "name": "Darkweaver",
+      "phases": [
+        {"name": "Phase 1", "typical_start": 0, "typical_end": 80},
+        {"name": "Shadow Phase", "typical_start": 80, "typical_end": 110},
+        {"name": "Phase 2", "typical_start": 110, "typical_end": 190},
+        {"name": "Enrage", "typical_start": 190, "typical_end": 250}
+      ]
+    },
+    "3003": {
+      "name": "Null Sentinel",
+      "phases": [
+        {"name": "Phase 1", "typical_start": 0, "typical_end": 120},
+        {"name": "Phase 2", "typical_start": 120, "typical_end": 240}
+      ]
+    },
+    "3004": {
+      "name": "Entropic Colossus",
+      "phases": [
+        {"name": "Phase 1", "typical_start": 0, "typical_end": 100},
+        {"name": "Intermission", "typical_start": 100, "typical_end": 115},
+        {"name": "Phase 2", "typical_start": 115, "typical_end": 200},
+        {"name": "Phase 3", "typical_start": 200, "typical_end": 300}
+      ]
+    },
+    "3005": {
+      "name": "Voidlord Xyrath",
+      "phases": [
+        {"name": "Phase 1", "typical_start": 0, "typical_end": 90},
+        {"name": "Void Surge", "typical_start": 90, "typical_end": 120},
+        {"name": "Phase 2", "typical_start": 120, "typical_end": 210},
+        {"name": "Final Stand", "typical_start": 210, "typical_end": 300}
+      ]
+    },
+    "3006": {
+      "name": "Xal'atath's Echo",
+      "phases": [
+        {"name": "Phase 1", "typical_start": 0, "typical_end": 100},
+        {"name": "Intermission 1", "typical_start": 100, "typical_end": 120},
+        {"name": "Phase 2", "typical_start": 120, "typical_end": 220},
+        {"name": "Intermission 2", "typical_start": 220, "typical_end": 240},
+        {"name": "Phase 3", "typical_start": 240, "typical_end": 360}
+      ]
+    }
+  }
+}
