@@ -297,6 +297,125 @@ class BuildDivergence(BaseModel):
     extra_talents: list[str] = []
 
 
+# ============================================================
+# Phase 6A: Downtime/GCD 分析
+# ============================================================
+
+
+class DowntimeWindow(BaseModel):
+    """单个停工时间窗口。"""
+
+    start_sec: float
+    end_sec: float
+    duration_sec: float
+
+
+class DowntimeAnalysis(BaseModel):
+    """停工/GCD 分析结果。"""
+
+    active_time_pct: float = Field(description="玩家活跃时间百分比")
+    benchmark_active_time_pct: float = Field(description="基准活跃时间百分比")
+    total_downtime_sec: float = Field(description="总停工时间（秒）")
+    downtime_windows: list[DowntimeWindow] = Field(default_factory=list)
+    verdict: str = ""  # "ok", "low_activity", "very_low_activity"
+
+
+# ============================================================
+# Phase 6B: CD 窗口事件关联
+# ============================================================
+
+
+class CooldownWindowDetail(BaseModel):
+    """单个冷却技能 Buff 窗口的施法密度分析。"""
+
+    buff_name: str
+    buff_spell_id: int
+    start_sec: float
+    end_sec: float
+    duration_sec: float
+    casts_during: int
+    density_pct: float = Field(description="实际施法 / 理论最大 GCD 占比")
+
+
+class EventLinkingAnalysis(BaseModel):
+    """CD 窗口事件关联分析结果。"""
+
+    cooldown_windows: list[CooldownWindowDetail] = Field(default_factory=list)
+    low_density_windows_count: int = 0
+    verdict: str = ""  # "ok", "low_density_burst"
+
+
+# ============================================================
+# Phase 6C: 天赋技能使用分析
+# ============================================================
+
+
+class TalentUsageGap(BaseModel):
+    """单个天赋授予技能的使用差距分析。"""
+
+    talent_name: str
+    talent_id: int
+    spell_name: str
+    spell_id: int
+    player_casts: int
+    benchmark_median_casts: float
+    player_cpm: float
+    benchmark_cpm: float
+    verdict: str = ""  # "unused", "underused", "ok"
+
+
+class TalentUsageAnalysis(BaseModel):
+    """天赋技能使用分析结果。"""
+
+    talent_gaps: list[TalentUsageGap] = Field(default_factory=list)
+    unused_talent_spells: list[str] = Field(default_factory=list)
+
+
+# ============================================================
+# Phase 6D: CD 窗口输出分析
+# ============================================================
+
+
+class CDWindowThroughput(BaseModel):
+    """单个 CD 窗口的输出分析。"""
+
+    ability_name: str
+    window_index: int
+    damage_done: float
+    casts_during: int
+    active_time_pct: float
+    benchmark_median_damage: float
+    benchmark_median_casts: float = 0.0
+    verdict: str = ""  # "strong", "average", "weak"
+
+
+# ============================================================
+# Phase 6E: APL 循环检查
+# ============================================================
+
+
+class APLViolation(BaseModel):
+    """单次 APL 违规事件。"""
+
+    timestamp_sec: float
+    expected_spell: str
+    actual_spell: str
+    rule_priority: int
+    severity: str = ""  # "high", "medium", "low"
+    benchmark_weight: float = 0.0
+
+
+class APLAnalysis(BaseModel):
+    """APL 循环合规性分析结果。"""
+
+    spec: str
+    apl_version: str = ""
+    compliance_pct: float = 0.0
+    violations: list[APLViolation] = Field(default_factory=list)
+    high_severity_count: int = 0
+    top_violation_patterns: list[str] = Field(default_factory=list)
+
+
 class PlayerAnalysisResponse(BaseModel):
     """analyze_player_log 工具返回值 — 完整的玩家日志分析。"""
 
@@ -322,4 +441,124 @@ class PlayerAnalysisResponse(BaseModel):
     build_divergence: BuildDivergence = Field(
         default_factory=BuildDivergence
     )
+    cd_window_analysis: Optional[EventLinkingAnalysis] = None
+    talent_usage: Optional[TalentUsageAnalysis] = None
+    downtime: Optional[DowntimeAnalysis] = None
+    cd_throughput: list[CDWindowThroughput] = Field(default_factory=list)
+    apl_analysis: Optional[APLAnalysis] = None
+    eclipse_metrics: Optional[EclipseMetrics] = None
     top_issues: list[str] = []
+
+
+# ============================================================
+# Phase 7: get_cast_sequence 相关
+# ============================================================
+
+
+class CastEvent(BaseModel):
+    """单次施法事件。"""
+
+    spell_id: int
+    spell_name: str
+    timestamp_sec: float = Field(description="相对于战斗开始的秒数")
+    resource_amount: Optional[float] = Field(
+        default=None, description="施法时的资源值（如星界能量），无数据时为 None"
+    )
+    resource_max: Optional[float] = Field(
+        default=None, description="资源最大值，无数据时为 None"
+    )
+
+
+class CastSequenceResponse(BaseModel):
+    """get_cast_sequence 工具返回值。"""
+
+    report_code: str
+    fight_id: int
+    player_name: str
+    spec: str
+    fight_duration: float = 0.0
+    time_start: float = 0.0
+    time_end: float = 0.0
+    total_casts: int = 0
+    casts: list[CastEvent] = Field(default_factory=list)
+
+
+# ============================================================
+# Phase 7: get_buff_timeline 相关
+# ============================================================
+
+
+class BuffEvent(BaseModel):
+    """单次 Buff 事件（apply/remove/stack 变化）。"""
+
+    buff_id: int
+    buff_name: str
+    event_type: str = Field(description="applybuff, removebuff, applybuffstack, removebuffstack")
+    timestamp_sec: float = Field(description="相对于战斗开始的秒数")
+    stacks: int = 0
+
+
+class BuffSummary(BaseModel):
+    """单个 Buff 的时间线统计。"""
+
+    buff_id: int
+    buff_name: str
+    uptime_pct: float = 0.0
+    avg_stacks: float = 0.0
+    apply_count: int = 0
+    events: list[BuffEvent] = Field(default_factory=list)
+
+
+class BuffTimelineResponse(BaseModel):
+    """get_buff_timeline 工具返回值。"""
+
+    report_code: str
+    fight_id: int
+    player_name: str
+    fight_duration: float = 0.0
+    time_start: float = 0.0
+    time_end: float = 0.0
+    buffs: list[BuffSummary] = Field(default_factory=list)
+
+
+# ============================================================
+# Phase 7: get_resource_timeline 相关
+# ============================================================
+
+
+class ResourcePoint(BaseModel):
+    """资源变化事件（WCL resourcechange delta）。"""
+
+    timestamp_sec: float = Field(description="相对于战斗开始的秒数")
+    value: int = Field(default=0, description="资源变化量（正=获取，负=消耗）")
+    max_value: int = Field(default=0, description="资源上限")
+    spell_name: str = Field(default="", description="触发资源变化的技能名称")
+    is_overflow: bool = Field(default=False, description="是否发生溢出（waste > 0）")
+
+
+class ResourceTimelineResponse(BaseModel):
+    """get_resource_timeline 工具返回值。"""
+
+    report_code: str
+    fight_id: int
+    player_name: str
+    resource_type: str
+    fight_duration: float = 0.0
+    total_points: int = 0
+    overflow_count: int = 0
+    overflow_pct: float = 0.0
+    points: list[ResourcePoint] = Field(default_factory=list)
+
+
+# ============================================================
+# Phase 7: Eclipse 指标（Balance Druid 专用）
+# ============================================================
+
+
+class EclipseMetrics(BaseModel):
+    """Balance Druid Eclipse 指标。"""
+
+    eclipse_uptime_pct: float = 0.0
+    avg_eclipse_gap_sec: float = 0.0
+    ca_eclipse_coverage_pct: float = 0.0
+    starlord_uptime_pct: float = 0.0

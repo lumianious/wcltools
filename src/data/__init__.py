@@ -217,6 +217,23 @@ def get_talent_tree(talent_id: int) -> Optional[str]:
     return tree if tree else None
 
 
+def get_spec_apl(slug: str) -> Optional[dict]:
+    """
+    加载指定专精的 APL 数据。
+
+    Args:
+        slug: 专精 slug，如 "balance-druid"
+
+    Returns:
+        APL 数据字典，文件不存在返回 None
+    """
+    apl_path = _DATA_DIR / "apl" / f"{slug}.json"
+    if not apl_path.exists():
+        return None
+    with open(apl_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 def get_talent_spell_id(talent_id: int) -> Optional[int]:
     """
     按天赋节点/条目 ID 查找对应的 spell_id。
@@ -232,3 +249,84 @@ def get_talent_spell_id(talent_id: int) -> Optional[int]:
         return None
     spell_id = entry.get("spell_id")
     return spell_id if spell_id else None
+
+
+def get_talent_spec(talent_id: int) -> Optional[str]:
+    """
+    按天赋节点/条目 ID 查找所属专精名称（中文）。
+
+    Args:
+        talent_id: 天赋节点 ID 或条目 ID（WCL talentID）
+
+    Returns:
+        中文专精名称字符串（如 "平衡"），未找到返回 None
+    """
+    entry = _build_talent_index().get(str(talent_id))
+    if entry is None:
+        return None
+    spec = entry.get("spec", "")
+    return spec if spec else None
+
+
+# 职业 → 该职业所有专精的中文名称（静态游戏数据映射）
+_CLASS_SPEC_NAMES_ZH: dict[str, set[str]] = {
+    "Warrior": {"武器", "狂怒", "防护"},
+    "Paladin": {"神圣", "防护", "惩戒"},
+    "Hunter": {"野兽控制", "射击", "生存"},
+    "Rogue": {"奇袭", "狂徒", "敏锐"},
+    "Priest": {"戒律", "神圣", "暗影"},
+    "DeathKnight": {"鲜血", "冰霜", "邪恶"},
+    "Shaman": {"元素", "增强", "恢复"},
+    "Mage": {"奥术", "火焰", "冰霜"},
+    "Warlock": {"痛苦", "恶魔学识", "毁灭"},
+    "Monk": {"酒仙", "织雾", "踏风"},
+    "Druid": {"平衡", "野性", "守护", "恢复"},
+    "DemonHunter": {"浩劫", "复仇"},
+    "Evoker": {"湮灭", "恩护", "增辉"},
+}
+
+
+def get_class_spec_names(slug: str) -> set[str]:
+    """
+    根据专精 slug 获取同职业所有专精的中文名称集合。
+
+    通过 specs.json 查找 class_name，然后返回该职业的中文专精名集合。
+
+    Args:
+        slug: 专精 slug，如 "balance-druid"
+
+    Returns:
+        中文专精名称集合，如 {"平衡", "野性", "守护", "恢复"}
+    """
+    spec_info = get_spec(slug)
+    if spec_info is None:
+        return set()
+    class_name = spec_info.get("class_name", "")
+    return _CLASS_SPEC_NAMES_ZH.get(class_name, set())
+
+
+# spell_id → talent entry_id 反查索引
+_spell_to_talent: dict[int, str] | None = None
+
+
+def get_talent_id_by_spell(spell_id: int) -> Optional[int]:
+    """
+    按 spell_id 反查对应的天赋条目 ID。
+
+    用于判断某个技能是否是天赋授予的。
+
+    Args:
+        spell_id: 技能 ID
+
+    Returns:
+        天赋条目 ID（整数），未找到返回 None
+    """
+    global _spell_to_talent
+    if _spell_to_talent is None:
+        _spell_to_talent = {}
+        for tid_str, entry in _build_talent_index().items():
+            sid = entry.get("spell_id")
+            if sid and sid not in _spell_to_talent:
+                _spell_to_talent[sid] = tid_str
+    tid_str = _spell_to_talent.get(spell_id)
+    return int(tid_str) if tid_str else None

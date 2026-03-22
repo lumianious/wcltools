@@ -1,0 +1,697 @@
+{
+  "spec": "balance-druid",
+  "version": "v1",
+  "source": "['ActionPriorityLists/default/druid_balance.simc', 'ActionPriorityLists/assisted_combat/druid_balance.simc', 'engine/class_modules/apl/druid/balance.simc', 'profiles/Tier31/T31_Druid_Balance.simc', 'engine/class_modules/apl/apl_druid.cpp']",
+  "action_lists": {
+    "precombat": [
+      "moonkin_form",
+      "wrath",
+      "wrath",
+      "wrath",
+      "starfire"
+    ],
+    "default": [
+      "berserking",
+      "invoke_external_buff"
+    ],
+    "aoe": [
+      "celestial_alignment",
+      "moonfire",
+      "sunfire",
+      "fury_of_elune",
+      "solar_eclipse",
+      "lunar_eclipse",
+      "convoke_the_spirits",
+      "wrath",
+      "sunfire",
+      "force_of_nature",
+      "starfall",
+      "starsurge",
+      "starfire",
+      "new_moon",
+      "half_moon",
+      "full_moon",
+      "wild_mushroom",
+      "starfire",
+      "wrath"
+    ],
+    "ec_st": [
+      "celestial_alignment",
+      "moonfire",
+      "sunfire",
+      "convoke_the_spirits",
+      "lunar_eclipse",
+      "starfall",
+      "starsurge",
+      "fury_of_elune",
+      "force_of_nature",
+      "new_moon",
+      "half_moon",
+      "full_moon",
+      "wild_mushroom",
+      "starfire",
+      "wrath"
+    ],
+    "kotg_st": [
+      "celestial_alignment",
+      "moonfire",
+      "sunfire",
+      "fury_of_elune",
+      "solar_eclipse",
+      "force_of_nature",
+      "convoke_the_spirits",
+      "wrath",
+      "sunfire",
+      "starfall",
+      "starsurge",
+      "starfire",
+      "new_moon",
+      "half_moon",
+      "full_moon",
+      "wild_mushroom",
+      "wrath"
+    ]
+  },
+  "rules": [
+    {
+      "spell": "moonkin_form",
+      "conditions": [],
+      "action_list": "precombat",
+      "raw_line": "actions.precombat+=/moonkin_form",
+      "priority": 1
+    },
+    {
+      "spell": "wrath",
+      "conditions": [],
+      "action_list": "precombat",
+      "raw_line": "actions.precombat+=/wrath",
+      "priority": 2
+    },
+    {
+      "spell": "wrath",
+      "conditions": [],
+      "action_list": "precombat",
+      "raw_line": "actions.precombat+=/wrath",
+      "priority": 3
+    },
+    {
+      "spell": "wrath",
+      "conditions": [
+        "talent.dream_surge",
+        "enemies=1"
+      ],
+      "action_list": "precombat",
+      "raw_line": "actions.precombat+=/wrath,if=talent.dream_surge&enemies=1",
+      "priority": 4
+    },
+    {
+      "spell": "starfire",
+      "conditions": [
+        "hero_tree.elunes_chosen",
+        "enemies>1"
+      ],
+      "action_list": "precombat",
+      "raw_line": "actions.precombat+=/starfire,if=hero_tree.elunes_chosen|enemies>1",
+      "priority": 5
+    },
+    {
+      "spell": "berserking",
+      "conditions": [
+        "buff.ca_inc.up",
+        "buff.harmony_of_the_grove.up",
+        "!talent.dream_surge",
+        "fight_remains<cooldown.ca_inc.remains"
+      ],
+      "action_list": "default",
+      "raw_line": "actions+=/berserking,if=buff.ca_inc.up&(buff.harmony_of_the_grove.up|!talent.dream_surge)|fight_remains<cooldown.ca_inc.remains",
+      "priority": 6
+    },
+    {
+      "spell": "invoke_external_buff",
+      "conditions": [
+        "buff.ca_inc.up"
+      ],
+      "action_list": "default",
+      "raw_line": "actions+=/invoke_external_buff,name=power_infusion,if=buff.ca_inc.up",
+      "priority": 7
+    },
+    {
+      "spell": "celestial_alignment",
+      "conditions": [
+        "prev_gcd.1.force_of_nature",
+        "!variable.ec",
+        "variable.ec",
+        "prev_gcd.1.fury_of_elune",
+        "buff.eclipse.down",
+        "variable.on_use_trinket=0",
+        "trinket.1.cooldown.remains>60",
+        "trinket.1.cooldown.ready",
+        "fight_remains<trinket.1.cooldown.remains",
+        "trinket.2.cooldown.remains>60",
+        "trinket.2.cooldown.ready",
+        "fight_remains<trinket.2.cooldown.remains",
+        "fight_remains<20"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe=celestial_alignment,if=prev_gcd.1.force_of_nature&!variable.ec|variable.ec&prev_gcd.1.fury_of_elune&buff.eclipse.down&(variable.on_use_trinket=0|trinket.1.cooldown.remains>60|trinket.1.cooldown.ready|fight_remains<trinket.1.cooldown.remains|trinket.2.cooldown.remains>60|trinket.2.cooldown.ready|fight_remains<trinket.2.cooldown.remains)|fight_remains<20",
+      "priority": 8
+    },
+    {
+      "spell": "moonfire",
+      "conditions": [],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/moonfire,target_if=remains<2|refreshable&variable.eclipse_down",
+      "priority": 9
+    },
+    {
+      "spell": "sunfire",
+      "conditions": [],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/sunfire,target_if=remains<2|refreshable&variable.eclipse_down",
+      "priority": 10
+    },
+    {
+      "spell": "fury_of_elune",
+      "conditions": [
+        "variable.ec",
+        "!variable.ec",
+        "variable.opener",
+        "!variable.eclipse_down",
+        "buff.ascendant_stars.down",
+        "!variable.opener",
+        "!variable.ec",
+        "buff.harmony_of_the_grove.up",
+        "cooldown.force_of_nature.remains<gcd.max",
+        "talent.radiant_moonlight",
+        "cooldown.force_of_nature.remains>20"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/fury_of_elune,if=variable.ec|!variable.ec&(variable.opener&!variable.eclipse_down&buff.ascendant_stars.down|!variable.opener&(!variable.ec&(buff.harmony_of_the_grove.up|cooldown.force_of_nature.remains<gcd.max|talent.radiant_moonlight&cooldown.force_of_nature.remains>20)))",
+      "priority": 11
+    },
+    {
+      "spell": "solar_eclipse",
+      "conditions": [
+        "variable.opener",
+        "cooldown.eclipse.charges_fractional=2",
+        "!variable.opener",
+        "cooldown.solar_eclipse.charges_fractional>1.5",
+        "variable.cd_window",
+        "cooldown.solar_eclipse.ready",
+        "variable.cd_window_narrow",
+        "fight_remains<15"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/solar_eclipse,if=variable.opener&cooldown.eclipse.charges_fractional=2|!variable.opener&cooldown.solar_eclipse.charges_fractional>1.5&variable.cd_window|cooldown.solar_eclipse.ready&variable.cd_window_narrow|fight_remains<15",
+      "priority": 12
+    },
+    {
+      "spell": "lunar_eclipse",
+      "conditions": [
+        "!variable.prio",
+        "spell_targets>2",
+        "!variable.ec",
+        "variable.opener",
+        "cooldown.eclipse.charges_fractional=2",
+        "!variable.opener",
+        "cooldown.lunar_eclipse.charges_fractional>1.5",
+        "variable.cd_window",
+        "cooldown.lunar_eclipse.ready",
+        "variable.cd_window_narrow",
+        "variable.ec",
+        "variable.opener",
+        "cooldown.ca_inc.full_recharge_time>15",
+        "fight_remains<15"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/lunar_eclipse,if=!variable.prio&spell_targets>2&!variable.ec&(variable.opener&cooldown.eclipse.charges_fractional=2|!variable.opener&cooldown.lunar_eclipse.charges_fractional>1.5&variable.cd_window|cooldown.lunar_eclipse.ready&variable.cd_window_narrow)|variable.ec&(variable.opener|cooldown.ca_inc.full_recharge_time>15)|fight_remains<15",
+      "priority": 13
+    },
+    {
+      "spell": "convoke_the_spirits",
+      "conditions": [
+        "buff.ca_inc.up",
+        "astral_power<40",
+        "cooldown.ca_inc.remains>50",
+        "buff.harmony_of_the_grove.up",
+        "buff.ca_inc.down"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/convoke_the_spirits,if=buff.ca_inc.up&astral_power<40|cooldown.ca_inc.remains>50&buff.harmony_of_the_grove.up&buff.ca_inc.down",
+      "priority": 14
+    },
+    {
+      "spell": "wrath",
+      "conditions": [
+        "!talent.convoke_the_spirits",
+        "spell_targets<3",
+        "buff.ascendant_stars.down",
+        "variable.opener",
+        "astral_power<50",
+        "!variable.opener",
+        "astral_power<80",
+        "variable.no_weaver_procs",
+        "cooldown.force_of_nature.remains<15"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/wrath,if=!talent.convoke_the_spirits&spell_targets<3&buff.ascendant_stars.down&(variable.opener&astral_power<50|!variable.opener&astral_power<80&variable.no_weaver_procs&cooldown.force_of_nature.remains<15)",
+      "priority": 15
+    },
+    {
+      "spell": "sunfire",
+      "conditions": [],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/sunfire,target_if=!talent.aetherial_kindling&(variable.opener&buff.ascendant_stars.down|!variable.opener&dot.sunfire.remains<10&variable.ca_soon&cooldown.force_of_nature.remains<3),line_cd=10",
+      "priority": 16
+    },
+    {
+      "spell": "force_of_nature",
+      "conditions": [
+        "!variable.opener",
+        "buff.ascendant_stars.down"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/force_of_nature,if=!variable.opener|buff.ascendant_stars.down",
+      "priority": 17
+    },
+    {
+      "spell": "starfall",
+      "conditions": [
+        "astral_power>80",
+        "!variable.eclipse_down",
+        "!buff.starweavers_weft.react"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/starfall,if=astral_power>80|!variable.eclipse_down|!buff.starweavers_weft.react",
+      "priority": 18
+    },
+    {
+      "spell": "starsurge",
+      "conditions": [
+        "buff.starweavers_weft.react"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/starsurge,if=buff.starweavers_weft.react",
+      "priority": 19
+    },
+    {
+      "spell": "starfire",
+      "conditions": [
+        "buff.ascendant_fires.up",
+        "buff.eclipse_lunar.up"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/starfire,if=buff.ascendant_fires.up&buff.eclipse_lunar.up",
+      "priority": 20
+    },
+    {
+      "spell": "new_moon",
+      "conditions": [
+        "astral_power.deficit>energize_amount"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/new_moon,if=astral_power.deficit>energize_amount",
+      "priority": 21
+    },
+    {
+      "spell": "half_moon",
+      "conditions": [
+        "astral_power.deficit>energize_amount"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/half_moon,if=astral_power.deficit>energize_amount",
+      "priority": 22
+    },
+    {
+      "spell": "full_moon",
+      "conditions": [
+        "astral_power.deficit>energize_amount"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/full_moon,if=astral_power.deficit>energize_amount",
+      "priority": 23
+    },
+    {
+      "spell": "wild_mushroom",
+      "conditions": [
+        "buff.eclipse_solar.up",
+        "cooldown.wild_mushroom.full_recharge_time<cooldown.ca_inc.remains"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/wild_mushroom,if=buff.eclipse_solar.up|cooldown.wild_mushroom.full_recharge_time<cooldown.ca_inc.remains",
+      "priority": 24
+    },
+    {
+      "spell": "starfire",
+      "conditions": [
+        "variable.ec",
+        "variable.eclipse_down",
+        "spell_targets.starfire>6",
+        "buff.eclipse_lunar.up",
+        "spell_targets.starfire>2",
+        "buff.ca_inc.up",
+        "spell_targets.starfire<=2",
+        "!buff.ca_inc.up"
+      ],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/starfire,if=variable.ec|variable.eclipse_down&spell_targets.starfire>6|buff.eclipse_lunar.up&(spell_targets.starfire>2&buff.ca_inc.up|spell_targets.starfire<=2&!buff.ca_inc.up)",
+      "priority": 25
+    },
+    {
+      "spell": "wrath",
+      "conditions": [],
+      "action_list": "aoe",
+      "raw_line": "actions.aoe+=/wrath",
+      "priority": 26
+    },
+    {
+      "spell": "celestial_alignment",
+      "conditions": [
+        "buff.ca_inc.down",
+        "cooldown.eclipse.charges_fractional<1.5",
+        "buff.ascendant_stars.down"
+      ],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st=celestial_alignment,if=buff.ca_inc.down&cooldown.eclipse.charges_fractional<1.5&buff.ascendant_stars.down",
+      "priority": 27
+    },
+    {
+      "spell": "moonfire",
+      "conditions": [],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/moonfire,target_if=remains<2|refreshable&variable.eclipse_down",
+      "priority": 28
+    },
+    {
+      "spell": "sunfire",
+      "conditions": [],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/sunfire,target_if=remains<2|refreshable&variable.eclipse_down",
+      "priority": 29
+    },
+    {
+      "spell": "convoke_the_spirits",
+      "conditions": [
+        "buff.ca_inc.up",
+        "astral_power<40",
+        "cooldown.ca_inc.remains>50",
+        "fight_remains<30"
+      ],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/convoke_the_spirits,if=buff.ca_inc.up&astral_power<40|cooldown.ca_inc.remains>50|fight_remains<30",
+      "priority": 30
+    },
+    {
+      "spell": "lunar_eclipse",
+      "conditions": [
+        "cooldown.ca_inc.full_recharge_time>15",
+        "variable.opener"
+      ],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/lunar_eclipse,if=cooldown.ca_inc.full_recharge_time>15|variable.opener",
+      "priority": 31
+    },
+    {
+      "spell": "starfall",
+      "conditions": [
+        "buff.starweavers_warp.react",
+        "buff.touch_the_cosmos.react",
+        "talent.starweaver",
+        "buff.ascendant_stars.down"
+      ],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/starfall,if=buff.starweavers_warp.react|buff.touch_the_cosmos.react&talent.starweaver&buff.ascendant_stars.down",
+      "priority": 32
+    },
+    {
+      "spell": "starsurge",
+      "conditions": [
+        "astral_power>80",
+        "!variable.eclipse_down",
+        "buff.starweavers_weft.react",
+        "buff.touch_the_cosmos.react",
+        "buff.ascendant_stars.up"
+      ],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/starsurge,if=astral_power>80|!variable.eclipse_down|buff.starweavers_weft.react|buff.touch_the_cosmos.react&buff.ascendant_stars.up",
+      "priority": 33
+    },
+    {
+      "spell": "fury_of_elune",
+      "conditions": [],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/fury_of_elune",
+      "priority": 34
+    },
+    {
+      "spell": "force_of_nature",
+      "conditions": [],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/force_of_nature",
+      "priority": 35
+    },
+    {
+      "spell": "new_moon",
+      "conditions": [
+        "astral_power.deficit>energize_amount"
+      ],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/new_moon,if=astral_power.deficit>energize_amount",
+      "priority": 36
+    },
+    {
+      "spell": "half_moon",
+      "conditions": [
+        "astral_power.deficit>energize_amount"
+      ],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/half_moon,if=astral_power.deficit>energize_amount",
+      "priority": 37
+    },
+    {
+      "spell": "full_moon",
+      "conditions": [
+        "astral_power.deficit>energize_amount"
+      ],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/full_moon,if=astral_power.deficit>energize_amount",
+      "priority": 38
+    },
+    {
+      "spell": "wild_mushroom",
+      "conditions": [
+        "buff.eclipse_solar.up",
+        "cooldown.wild_mushroom.full_recharge_time<cooldown.ca_inc.remains"
+      ],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/wild_mushroom,if=buff.eclipse_solar.up|cooldown.wild_mushroom.full_recharge_time<cooldown.ca_inc.remains",
+      "priority": 39
+    },
+    {
+      "spell": "starfire",
+      "conditions": [
+        "!variable.eclipse_down"
+      ],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/starfire,if=!variable.eclipse_down",
+      "priority": 40
+    },
+    {
+      "spell": "wrath",
+      "conditions": [
+        "variable.eclipse_down"
+      ],
+      "action_list": "ec_st",
+      "raw_line": "actions.ec_st+=/wrath,if=variable.eclipse_down",
+      "priority": 41
+    },
+    {
+      "spell": "celestial_alignment",
+      "conditions": [
+        "prev_gcd.1.force_of_nature",
+        "fight_remains<20"
+      ],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st=celestial_alignment,if=prev_gcd.1.force_of_nature|fight_remains<20",
+      "priority": 42
+    },
+    {
+      "spell": "moonfire",
+      "conditions": [],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/moonfire,target_if=remains<2|refreshable&variable.eclipse_down",
+      "priority": 43
+    },
+    {
+      "spell": "sunfire",
+      "conditions": [],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/sunfire,target_if=remains<2|refreshable&variable.eclipse_down",
+      "priority": 44
+    },
+    {
+      "spell": "fury_of_elune",
+      "conditions": [
+        "variable.opener",
+        "!variable.eclipse_down",
+        "buff.ascendant_stars.down",
+        "!variable.opener",
+        "buff.harmony_of_the_grove.up",
+        "cooldown.force_of_nature.remains<gcd.max",
+        "talent.radiant_moonlight",
+        "cooldown.force_of_nature.remains>20"
+      ],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/fury_of_elune,if=variable.opener&!variable.eclipse_down&buff.ascendant_stars.down|!variable.opener&(buff.harmony_of_the_grove.up|cooldown.force_of_nature.remains<gcd.max|talent.radiant_moonlight&cooldown.force_of_nature.remains>20)",
+      "priority": 45
+    },
+    {
+      "spell": "solar_eclipse",
+      "conditions": [
+        "variable.opener",
+        "cooldown.eclipse.charges=2",
+        "!variable.opener",
+        "cooldown.solar_eclipse.charges_fractional>1.5",
+        "variable.cd_window",
+        "cooldown.solar_eclipse.ready",
+        "variable.cd_window_narrow",
+        "fight_remains<15"
+      ],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/solar_eclipse,if=variable.opener&cooldown.eclipse.charges=2|!variable.opener&cooldown.solar_eclipse.charges_fractional>1.5&variable.cd_window|cooldown.solar_eclipse.ready&variable.cd_window_narrow|fight_remains<15",
+      "priority": 46
+    },
+    {
+      "spell": "force_of_nature",
+      "conditions": [
+        "variable.opener",
+        "buff.ascendant_stars.down",
+        "dot.sunfire.remains>16",
+        "!variable.opener",
+        "buff.eclipse.remains>cooldown.force_of_nature.duration",
+        "!buff.eclipse.up",
+        "cooldown.eclipse.remains<gcd.max",
+        "cooldown.ca_inc.ready",
+        "!talent.convoke_the_spirits",
+        "cooldown.convoke_the_spirits.remains<gcd.max*5",
+        "fight_remains<15"
+      ],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/force_of_nature,if=variable.opener&buff.ascendant_stars.down&dot.sunfire.remains>16|!variable.opener&(buff.eclipse.remains>cooldown.force_of_nature.duration|!buff.eclipse.up&(cooldown.eclipse.remains<gcd.max|cooldown.ca_inc.ready&(!talent.convoke_the_spirits|cooldown.convoke_the_spirits.remains<gcd.max*5)))|fight_remains<15",
+      "priority": 47
+    },
+    {
+      "spell": "convoke_the_spirits",
+      "conditions": [
+        "buff.ca_inc.up",
+        "astral_power<40",
+        "cooldown.ca_inc.remains>50",
+        "buff.harmony_of_the_grove.up",
+        "buff.ca_inc.down",
+        "astral_power<50"
+      ],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/convoke_the_spirits,if=buff.ca_inc.up&astral_power<40|cooldown.ca_inc.remains>50&buff.harmony_of_the_grove.up&buff.ca_inc.down&astral_power<50",
+      "priority": 48
+    },
+    {
+      "spell": "wrath",
+      "conditions": [
+        "!talent.convoke_the_spirits",
+        "buff.ascendant_stars.down",
+        "variable.opener",
+        "astral_power<50",
+        "!variable.opener",
+        "astral_power<80",
+        "variable.no_weaver_procs",
+        "cooldown.force_of_nature.remains<15"
+      ],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/wrath,if=!talent.convoke_the_spirits&buff.ascendant_stars.down&(variable.opener&astral_power<50|!variable.opener&astral_power<80&variable.no_weaver_procs&cooldown.force_of_nature.remains<15)",
+      "priority": 49
+    },
+    {
+      "spell": "sunfire",
+      "conditions": [],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/sunfire,target_if=variable.opener&buff.ascendant_stars.down|!variable.opener&dot.sunfire.remains<10&variable.ca_soon&cooldown.force_of_nature.remains<3,line_cd=10",
+      "priority": 50
+    },
+    {
+      "spell": "starfall",
+      "conditions": [
+        "buff.starweavers_warp.react"
+      ],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/starfall,if=buff.starweavers_warp.react",
+      "priority": 51
+    },
+    {
+      "spell": "starsurge",
+      "conditions": [
+        "astral_power>action.starsurge.cost*2-(1*(buff.starweavers_weft.react+buff.touch_the_cosmos.react+buff.starweavers_warp.react",
+        "buff.eclipse_solar.up",
+        "buff.touch_the_cosmos.react",
+        "buff.ascendant_stars.up",
+        "buff.starweavers_weft.react"
+      ],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/starsurge,if=(astral_power>action.starsurge.cost*2-(1*(buff.starweavers_weft.react+buff.touch_the_cosmos.react+buff.starweavers_warp.react))|buff.eclipse_solar.up)|buff.touch_the_cosmos.react&buff.ascendant_stars.up|buff.starweavers_weft.react",
+      "priority": 52
+    },
+    {
+      "spell": "starfire",
+      "conditions": [
+        "buff.ascendant_fires.up",
+        "buff.eclipse_lunar.up"
+      ],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/starfire,if=buff.ascendant_fires.up&buff.eclipse_lunar.up",
+      "priority": 53
+    },
+    {
+      "spell": "new_moon",
+      "conditions": [
+        "astral_power.deficit>energize_amount"
+      ],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/new_moon,if=astral_power.deficit>energize_amount",
+      "priority": 54
+    },
+    {
+      "spell": "half_moon",
+      "conditions": [
+        "astral_power.deficit>energize_amount"
+      ],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/half_moon,if=astral_power.deficit>energize_amount",
+      "priority": 55
+    },
+    {
+      "spell": "full_moon",
+      "conditions": [
+        "astral_power.deficit>energize_amount"
+      ],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/full_moon,if=astral_power.deficit>energize_amount",
+      "priority": 56
+    },
+    {
+      "spell": "wild_mushroom",
+      "conditions": [
+        "buff.eclipse_solar.up",
+        "cooldown.wild_mushroom.full_recharge_time<cooldown.ca_inc.remains"
+      ],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/wild_mushroom,if=buff.eclipse_solar.up|cooldown.wild_mushroom.full_recharge_time<cooldown.ca_inc.remains",
+      "priority": 57
+    },
+    {
+      "spell": "wrath",
+      "conditions": [],
+      "action_list": "kotg_st",
+      "raw_line": "actions.kotg_st+=/wrath",
+      "priority": 58
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 WoW 团本 / 大秘境教练 MCP 服务器 — 入口模块。
 
 传输协议: stdio（stdout 专用于 JSON-RPC，日志全部走 stderr）
-工具注册: get_encounters, get_top_builds, get_spec_info, get_cooldown_timelines, get_rotation_profile, get_defensive_patterns, get_example_logs, analyze_player_log, get_coaching_context
+工具注册: get_encounters, get_top_builds, get_spec_info, get_cooldown_timelines, get_rotation_profile, get_defensive_patterns, get_example_logs, analyze_player_log, get_cast_sequence, get_buff_timeline, get_resource_timeline, get_coaching_context
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
 """
@@ -34,6 +34,9 @@ from src.tools.defensives import get_defensive_patterns as _get_defensive_patter
 from src.tools.examples import get_example_logs as _get_example_logs
 from src.tools.analyze import analyze_player_log as _analyze_player_log
 from src.tools.coaching import get_coaching_context as _get_coaching_context
+from src.tools.cast_sequence import get_cast_sequence as _get_cast_sequence
+from src.tools.buff_timeline import get_buff_timeline as _get_buff_timeline
+from src.tools.resource_timeline import get_resource_timeline as _get_resource_timeline
 from src.wcl_client import WCLClient
 
 # ============================================================
@@ -355,6 +358,139 @@ async def analyze_player_log(
         player=player,
         spec=spec,
         difficulty=difficulty,
+    )
+    return result.model_dump()
+
+
+# ============================================================
+# 工具: get_cast_sequence
+# ============================================================
+
+
+@mcp.tool()
+async def get_cast_sequence(
+    report: str,
+    fight_id: int,
+    player: str,
+    spec: str,
+    time_start: float = 0.0,
+    time_end: float = 0.0,
+) -> dict:
+    """
+    Extract a player's cast sequence from a specific WCL fight.
+
+    Returns a chronological list of cast events with spell names and
+    timestamps (relative to fight start in seconds). Supports time
+    range filtering. Useful for analyzing opener, burst windows, or
+    specific fight phases in detail.
+
+    Accepts a report code or full WCL URL. Cost: ~3-5 WCL points.
+
+    Args:
+        report: WCL report code or full URL
+        fight_id: Fight ID within the report
+        player: Character name (case-insensitive)
+        spec: Class spec slug, e.g. "balance-druid"
+        time_start: Start time in seconds relative to fight start (0 = beginning)
+        time_end: End time in seconds relative to fight start (0 = end of fight)
+    """
+    client = _get_wcl_client()
+    result = await _get_cast_sequence(
+        client,
+        report=report,
+        fight_id=fight_id,
+        player=player,
+        spec=spec,
+        time_start=time_start,
+        time_end=time_end,
+    )
+    return result.model_dump()
+
+
+# ============================================================
+# 工具: get_buff_timeline
+# ============================================================
+
+
+@mcp.tool()
+async def get_buff_timeline(
+    report: str,
+    fight_id: int,
+    player: str,
+    buff_ids: Optional[list[int]] = None,
+    time_start: float = 0.0,
+    time_end: float = 0.0,
+) -> dict:
+    """
+    Get a player's buff event timeline from a specific WCL fight.
+
+    Returns apply/remove/stack-change/refresh events for buffs and
+    debuffs (DoTs), with uptime percentages and average stack counts.
+    Filter by specific spell IDs or get all. Useful for analyzing
+    Eclipse uptime, cooldown buffs, proc uptime, and DoT refresh
+    timing (e.g. Moonfire/Sunfire clipping).
+
+    Accepts a report code or full WCL URL. Cost: ~5-7 WCL points.
+
+    Args:
+        report: WCL report code or full URL
+        fight_id: Fight ID within the report
+        player: Character name (case-insensitive)
+        buff_ids: Optional list of buff spell IDs to filter (None = all buffs)
+        time_start: Start time in seconds relative to fight start (0 = beginning)
+        time_end: End time in seconds relative to fight start (0 = end of fight)
+    """
+    client = _get_wcl_client()
+    result = await _get_buff_timeline(
+        client,
+        report=report,
+        fight_id=fight_id,
+        player=player,
+        buff_ids=buff_ids,
+        time_start=time_start,
+        time_end=time_end,
+    )
+    return result.model_dump()
+
+
+# ============================================================
+# 工具: get_resource_timeline
+# ============================================================
+
+
+@mcp.tool()
+async def get_resource_timeline(
+    report: str,
+    fight_id: int,
+    player: str,
+    resource_type: str = "astral_power",
+) -> dict:
+    """
+    Get a player's resource value timeline from a specific WCL fight.
+
+    Tracks resource values (e.g., Astral Power, Rage, Energy) over
+    time by extracting classResources from cast events. Detects
+    resource overflow (capping). Useful for diagnosing resource waste.
+
+    Supported resource types: astral_power, mana, rage, focus, energy,
+    combo_points, runes, runic_power, soul_shards, holy_power,
+    maelstrom, chi, insanity, fury, pain, essence.
+
+    Accepts a report code or full WCL URL. Cost: ~3-5 WCL points.
+
+    Args:
+        report: WCL report code or full URL
+        fight_id: Fight ID within the report
+        player: Character name (case-insensitive)
+        resource_type: Resource type string (default "astral_power")
+    """
+    client = _get_wcl_client()
+    result = await _get_resource_timeline(
+        client,
+        report=report,
+        fight_id=fight_id,
+        player=player,
+        resource_type=resource_type,
     )
     return result.model_dump()
 

@@ -11,11 +11,14 @@
             "get_encounters": "~1 point",
             "get_top_builds": "~2 points",
             "get_spec_info": "0 points (local data)",
-            "get_cooldown_timelines": "~150 points (50 reports \u00d7 3 queries)",
-            "get_rotation_profile": "~80 points (5 players \u00d7 16 queries)",
-            "get_defensive_patterns": "~60 points (10 players \u00d7 6 queries)",
+            "get_cooldown_timelines": "~150 points (50 reports × 3 queries)",
+            "get_rotation_profile": "~80 points (5 players × 16 queries)",
+            "get_defensive_patterns": "~60 points (10 players × 6 queries)",
             "analyze_player_log": "~5-7 points + benchmark cost if not cached",
             "get_example_logs": "~1 point",
+            "get_cast_sequence": "~3-5 points",
+            "get_buff_timeline": "~5-7 points (buffs + debuffs)",
+            "get_resource_timeline": "~3-5 points",
             "get_coaching_context": "0 points (local data)"
         },
         "advice": "Benchmarks cache for 6 hours. First query per spec/boss is expensive, subsequent ones are free. Budget ~300 points per coaching session."
@@ -32,6 +35,6 @@
             "Buff uptimes include all buffs on the player (including externals from healers)"
         ]
     },
-    "tool_count": 9,
-    "phase": "Phase 5 complete"
+    "tool_count": 12,
+    "phase": "Phase 7 complete"
 }

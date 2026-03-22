@@ -259,6 +259,61 @@ async def _query_cast_events(
 
 
 # ============================================================
+# WCL 查询: 伤害事件 (分页)
+# ============================================================
+
+
+async def _query_damage_events(
+    client: WCLClient,
+    report_code: str,
+    fight_id: int,
+    source_id: int,
+    start_time: Optional[int] = None,
+    end_time: Optional[int] = None,
+) -> list[dict]:
+    """
+    分页查询指定玩家在指定战斗中的所有伤害事件。
+
+    返回原始 event 列表 [{timestamp, type, abilityGameID, amount, ...}]
+    支持可选的 startTime/endTime 限制查询范围。
+    """
+    all_events: list[dict] = []
+    next_ts: Optional[int] = start_time or 0
+
+    while next_ts is not None:
+        time_filter = f"startTime: {next_ts}"
+        if end_time is not None:
+            time_filter += f"\n                        endTime: {end_time}"
+        else:
+            time_filter += "\n                        endTime: 99999999"
+
+        gql = f"""
+            reportData {{
+                report(code: "{report_code}") {{
+                    events(
+                        {time_filter}
+                        fightIDs: [{fight_id}]
+                        dataType: DamageDone
+                        sourceID: {source_id}
+                        limit: 10000
+                    ) {{
+                        data
+                        nextPageTimestamp
+                    }}
+                }}
+            }}
+        """
+        data = await client.query(gql)
+        report = data.get("reportData", {}).get("report", {})
+        events_block = report.get("events", {})
+        page_data = events_block.get("data", [])
+        all_events.extend(page_data)
+        next_ts = events_block.get("nextPageTimestamp")
+
+    return all_events
+
+
+# ============================================================
 # 批量获取施法数据（按 report 分组优化）
 # ============================================================
 
