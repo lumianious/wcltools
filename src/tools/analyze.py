@@ -50,6 +50,9 @@ from src.models import (
     EclipseMetrics,
     EventLinkingAnalysis,
     PlayerAnalysisResponse,
+    PlayerCombatStats,
+    PlayerGearItem,
+    PrepullBuff,
     SpellGap,
     TalentUsageAnalysis,
     TalentUsageGap,
@@ -349,15 +352,27 @@ async def _collect_player_fight_data(
     spell_counts: dict[int, int] = defaultdict(int)
     spell_names: dict[int, str] = {}
     cast_timestamps: list[tuple[int, int]] = []
+    # 构建活动区间：begincast→cast 配对，用于 downtime 计算
+    _pending_begincast: dict[int, int] = {}  # spell_id → begincast timestamp
+    _INSTANT_GCD_MS = 1000  # 瞬发技能占用的 GCD 估算（毫秒）
+    activity_intervals: list[tuple[int, int]] = []  # (start_ms, end_ms)
     for evt in events:
-        if evt.get("type") != "cast":
-            continue
+        evt_type = evt.get("type")
         spell_id = evt.get("abilityGameID")
-        if spell_id:
+        ts = evt.get("timestamp")
+        if evt_type == "begincast" and spell_id and ts is not None:
+            _pending_begincast[spell_id] = ts
+        elif evt_type == "cast" and spell_id:
             spell_counts[spell_id] += 1
-            ts = evt.get("timestamp")
             if ts is not None:
                 cast_timestamps.append((ts, spell_id))
+                # 配对 begincast → cast 形成活动区间
+                bc_ts = _pending_begincast.pop(spell_id, None)
+                if bc_ts is not None and bc_ts <= ts:
+                    activity_intervals.append((bc_ts, ts))
+                else:
+                    # 瞬发技能（无 begincast）→ 占用一个 GCD
+                    activity_intervals.append((ts, ts + _INSTANT_GCD_MS))
             if spell_id not in spell_names:
                 resolved = (
                     ability_map.get(spell_id)
@@ -365,12 +380,21 @@ async def _collect_player_fight_data(
                     or f"Spell {spell_id}"
                 )
                 spell_names[spell_id] = resolved
+    # 未配对的 begincast（取消施法）也算活动
+    for spell_id, bc_ts in _pending_begincast.items():
+        activity_intervals.append((bc_ts, bc_ts + _INSTANT_GCD_MS))
 
-    # 提取天赋 ID 列表（TWW 使用 talentTree 而非 talents）
+    # 提取 CombatantInfo 数据（天赋、装备、buff、属性）
     talents: list[dict] = []
+    gear_raw: list[dict] = []
+    auras_raw: list[dict] = []
+    combatant_raw: dict = {}
     if combatant_events:
         ci = combatant_events[0]
+        combatant_raw = ci
         talents = ci.get("talentTree", []) or ci.get("talents", [])
+        gear_raw = ci.get("gear", [])
+        auras_raw = ci.get("auras", [])
 
     # 计算 DPS
     player_dps = total_damage / fight_duration if fight_duration > 0 else 0.0
@@ -387,6 +411,10 @@ async def _collect_player_fight_data(
         "fight_duration": fight_duration,
         "player_dps": player_dps,
         "cast_timestamps": cast_timestamps,
+        "activity_intervals": activity_intervals,
+        "gear": gear_raw,
+        "auras": auras_raw,
+        "combatant_raw": combatant_raw,
     }
 
 
@@ -761,18 +789,33 @@ def _analyze_deaths(
 # 停工 / GCD 分析
 # ============================================================
 
-_DOWNTIME_GAP_THRESHOLD = 2.0  # 秒，超过此值视为停工窗口
+_DOWNTIME_GAP_THRESHOLD = 2.0  # 秒，合并后活动区间之间超过此值视为停工窗口
+
+
+def _merge_intervals(intervals: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    """合并重叠/相邻的活动区间。输入输出均为 (start_ms, end_ms) 列表。"""
+    if not intervals:
+        return []
+    sorted_iv = sorted(intervals)
+    merged: list[tuple[int, int]] = [sorted_iv[0]]
+    for start, end in sorted_iv[1:]:
+        if start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
 
 
 def _analyze_downtime(
-    cast_timestamps: list[tuple[int, int]],  # (timestamp_ms, spell_id)
+    activity_intervals: list[tuple[int, int]],  # (start_ms, end_ms) 活动区间
     fight_duration: float,  # 秒
     fight_start_time: int,  # ms（WCL 绝对时间戳）
     rotation_bench: Any,  # RotationProfileResponse 或 None
 ) -> DowntimeAnalysis:
     """
-    根据施法时间戳计算停工时间窗口。
+    根据活动区间（begincast→cast 配对 + 瞬发 GCD）计算停工时间窗口。
 
+    将所有活动区间合并后，检查区间之间的间隙。
     gap > 2.0 秒视为停工窗口，同时统计活跃时间百分比并与基准对比。
     """
     if fight_duration <= 0:
@@ -785,13 +828,12 @@ def _analyze_downtime(
 
     fight_end_time = fight_start_time + int(fight_duration * 1000)
 
-    # 按时间排序
-    sorted_casts = sorted(cast_timestamps, key=lambda x: x[0])
-
     downtime_windows: list[DowntimeWindow] = []
     total_downtime = 0.0
 
-    if not sorted_casts:
+    merged = _merge_intervals(activity_intervals)
+
+    if not merged:
         # 全程无施法 → 全部停工
         total_downtime = fight_duration
         downtime_windows.append(
@@ -802,8 +844,8 @@ def _analyze_downtime(
             )
         )
     else:
-        # 战斗开始到第一次施法的间隔
-        first_gap = (sorted_casts[0][0] - fight_start_time) / 1000.0
+        # 战斗开始到第一个活动区间的间隔
+        first_gap = (merged[0][0] - fight_start_time) / 1000.0
         if first_gap > _DOWNTIME_GAP_THRESHOLD:
             total_downtime += first_gap
             downtime_windows.append(
@@ -814,12 +856,12 @@ def _analyze_downtime(
                 )
             )
 
-        # 连续施法之间的间隔
-        for i in range(1, len(sorted_casts)):
-            gap = (sorted_casts[i][0] - sorted_casts[i - 1][0]) / 1000.0
+        # 合并后区间之间的间隔
+        for i in range(1, len(merged)):
+            gap = (merged[i][0] - merged[i - 1][1]) / 1000.0
             if gap > _DOWNTIME_GAP_THRESHOLD:
-                start_sec = (sorted_casts[i - 1][0] - fight_start_time) / 1000.0
-                end_sec = (sorted_casts[i][0] - fight_start_time) / 1000.0
+                start_sec = (merged[i - 1][1] - fight_start_time) / 1000.0
+                end_sec = (merged[i][0] - fight_start_time) / 1000.0
                 total_downtime += gap
                 downtime_windows.append(
                     DowntimeWindow(
@@ -829,10 +871,10 @@ def _analyze_downtime(
                     )
                 )
 
-        # 最后一次施法到战斗结束的间隔
-        last_gap = (fight_end_time - sorted_casts[-1][0]) / 1000.0
+        # 最后一个活动区间到战斗结束的间隔
+        last_gap = (fight_end_time - merged[-1][1]) / 1000.0
         if last_gap > _DOWNTIME_GAP_THRESHOLD:
-            start_sec = (sorted_casts[-1][0] - fight_start_time) / 1000.0
+            start_sec = (merged[-1][1] - fight_start_time) / 1000.0
             total_downtime += last_gap
             downtime_windows.append(
                 DowntimeWindow(
@@ -1492,7 +1534,7 @@ async def analyze_player_log(
         else None
     )
     downtime_analysis = _analyze_downtime(
-        player_data["cast_timestamps"],
+        player_data["activity_intervals"],
         fight_duration,
         start_time,
         bench_for_downtime,
@@ -1610,7 +1652,53 @@ async def analyze_player_log(
             elif zh or en:
                 player_talent_names.append(zh or en)
 
-    # ---- Step 7: 构建响应 ----
+    # ---- Step 7: 解析装备、消耗品、属性 ----
+    player_gear: list[PlayerGearItem] = []
+    for idx, item in enumerate(player_data.get("gear", [])):
+        if not item or not item.get("id"):
+            continue
+        player_gear.append(PlayerGearItem(
+            slot=idx,
+            item_id=item.get("id", 0),
+            name=item.get("name", f"Item {item.get('id', 0)}"),
+            item_level=item.get("itemLevel", 0),
+            quality=item.get("quality", 0),
+        ))
+
+    # 计算平均装等
+    ilvls = [g.item_level for g in player_gear if g.item_level > 0]
+    avg_ilvl = round(sum(ilvls) / len(ilvls), 1) if ilvls else 0.0
+
+    # 开战 buff（精炼药剂、食物、增强符文等）
+    prepull_buffs: list[PrepullBuff] = []
+    for aura in player_data.get("auras", []):
+        ability_id = aura.get("ability", 0)
+        if ability_id:
+            prepull_buffs.append(PrepullBuff(
+                ability_id=ability_id,
+                name=aura.get("name", f"Aura {ability_id}"),
+                stacks=aura.get("stacks", 1),
+            ))
+
+    # 属性面板
+    ci = player_data.get("combatant_raw", {})
+    combat_stats = None
+    if ci:
+        combat_stats = PlayerCombatStats(
+            stamina=ci.get("stamina", 0),
+            intellect=ci.get("intellect", 0),
+            strength=ci.get("strength", 0),
+            agility=ci.get("agility", 0),
+            crit=ci.get("critSpell", 0) or ci.get("critMelee", 0),
+            haste=ci.get("hasteSpell", 0) or ci.get("hasteMelee", 0),
+            mastery=ci.get("mastery", 0),
+            versatility=ci.get("versatilityDamageDonePercent", 0),
+            leech=ci.get("leech", 0),
+            avoidance=ci.get("avoidance", 0),
+            speed=ci.get("speed", 0),
+        )
+
+    # ---- Step 8: 构建响应 ----
     return PlayerAnalysisResponse(
         report_code=report_code,
         fight_id=fight_id,
@@ -1619,6 +1707,7 @@ async def analyze_player_log(
         encounter_id=encounter_id,
         encounter_name=encounter_name,
         difficulty=difficulty,
+        item_level=avg_ilvl,
         player_dps=round(player_dps, 1),
         dps_percentile=dps_percentile,
         fight_duration=round(fight_duration, 1),
@@ -1627,6 +1716,9 @@ async def analyze_player_log(
         rotation_gaps=rotation_gaps,
         cooldown_issues=cooldown_issues,
         defensive_issues=defensive_issues,
+        player_gear=player_gear,
+        prepull_buffs=prepull_buffs,
+        combat_stats=combat_stats,
         player_talents=player_talent_names,
         build_divergence=build_divergence,
         cd_window_analysis=cd_window_analysis,

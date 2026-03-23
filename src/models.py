@@ -416,6 +416,68 @@ class APLAnalysis(BaseModel):
     top_violation_patterns: list[str] = Field(default_factory=list)
 
 
+# ============================================================
+# Boss 技能时间线（get_boss_cast_timeline）
+# ============================================================
+
+
+class BossCastEvent(BaseModel):
+    """单次 boss 施法事件。"""
+
+    spell_id: int
+    spell_name: str
+    timestamp_sec: float = Field(description="相对于战斗开始的秒数")
+
+
+class BossCastTimelineResponse(BaseModel):
+    """get_boss_cast_timeline 工具返回值。"""
+
+    report_code: str
+    fight_id: int
+    encounter_id: int = 0
+    encounter_name: str = ""
+    fight_duration: float = 0.0
+    events: list[BossCastEvent] = Field(default_factory=list)
+    spell_summary: dict[str, int] = Field(
+        default_factory=dict,
+        description="每个技能的施法次数: spell_name → count",
+    )
+
+
+class PlayerGearItem(BaseModel):
+    """玩家装备栏单件装备。"""
+
+    slot: int = Field(description="装备栏位 (0-17)")
+    item_id: int = 0
+    name: str = ""
+    item_level: int = 0
+    quality: int = 0
+
+
+class PrepullBuff(BaseModel):
+    """开战时的一个 buff（含消耗品、职业 buff 等）。"""
+
+    ability_id: int
+    name: str = ""
+    stacks: int = 1
+
+
+class PlayerCombatStats(BaseModel):
+    """玩家战斗属性面板（从 CombatantInfo 提取）。"""
+
+    stamina: int = 0
+    intellect: int = 0
+    strength: int = 0
+    agility: int = 0
+    crit: float = 0.0
+    haste: float = 0.0
+    mastery: float = 0.0
+    versatility: float = 0.0
+    leech: float = 0.0
+    avoidance: float = 0.0
+    speed: float = 0.0
+
+
 class PlayerAnalysisResponse(BaseModel):
     """analyze_player_log 工具返回值 — 完整的玩家日志分析。"""
 
@@ -426,6 +488,7 @@ class PlayerAnalysisResponse(BaseModel):
     encounter_id: int = 0
     encounter_name: str = ""
     difficulty: str = ""
+    item_level: float = 0.0
     player_dps: float = 0.0
     dps_percentile: str = ""
     fight_duration: float = 0.0
@@ -434,6 +497,15 @@ class PlayerAnalysisResponse(BaseModel):
     rotation_gaps: list[SpellGap] = []
     cooldown_issues: list[CooldownIssue] = []
     defensive_issues: list[DefensiveIssue] = []
+    player_gear: list[PlayerGearItem] = Field(
+        default_factory=list,
+        description="玩家装备栏（含装等、饰品等）",
+    )
+    prepull_buffs: list[PrepullBuff] = Field(
+        default_factory=list,
+        description="开战时的 buff 列表（精炼药剂、食物、增强符文等）",
+    )
+    combat_stats: Optional[PlayerCombatStats] = None
     player_talents: list[str] = Field(
         default_factory=list,
         description="Player's full talent list with bilingual names",

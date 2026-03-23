@@ -2,7 +2,7 @@
 WoW 团本 / 大秘境教练 MCP 服务器 — 入口模块。
 
 传输协议: stdio（stdout 专用于 JSON-RPC，日志全部走 stderr）
-工具注册: get_encounters, get_top_builds, get_spec_info, get_cooldown_timelines, get_rotation_profile, get_defensive_patterns, get_example_logs, analyze_player_log, get_cast_sequence, get_buff_timeline, get_resource_timeline, get_coaching_context
+工具注册: get_encounters, get_top_builds, get_spec_info, get_cooldown_timelines, get_rotation_profile, get_defensive_patterns, get_example_logs, analyze_player_log, get_cast_sequence, get_buff_timeline, get_resource_timeline, get_boss_cast_timeline, get_coaching_context
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
 """
@@ -37,6 +37,7 @@ from src.tools.coaching import get_coaching_context as _get_coaching_context
 from src.tools.cast_sequence import get_cast_sequence as _get_cast_sequence
 from src.tools.buff_timeline import get_buff_timeline as _get_buff_timeline
 from src.tools.resource_timeline import get_resource_timeline as _get_resource_timeline
+from src.tools.boss_timeline import get_boss_cast_timeline as _get_boss_cast_timeline
 from src.wcl_client import WCLClient
 
 # ============================================================
@@ -509,6 +510,44 @@ async def get_coaching_context() -> dict:
     for effective coaching.
     """
     return await _get_coaching_context()
+
+
+# ============================================================
+# 工具: get_boss_cast_timeline
+# ============================================================
+
+
+@mcp.tool()
+async def get_boss_cast_timeline(
+    report: str,
+    fight_id: int,
+    spell_ids: list[int] | None = None,
+) -> dict:
+    """
+    Query boss ability cast timeline for a specific fight.
+
+    Returns timestamps of all enemy (boss) casts, useful for checking
+    whether player cooldowns align with key mechanics (add spawns,
+    vulnerability phases, etc.).
+
+    If spell_ids are provided, only those abilities are queried.
+    Otherwise, all known boss abilities for the encounter are returned.
+
+    Args:
+        report: WCL report code or full URL
+        fight_id: Fight ID within the report
+        spell_ids: Optional list of specific spell IDs to query
+
+    Cost: ~1-3 WCL API points (depends on number of abilities queried)
+    """
+    client = _get_wcl_client()
+    result = await _get_boss_cast_timeline(
+        client,
+        report=report,
+        fight_id=fight_id,
+        spell_ids=spell_ids,
+    )
+    return result.model_dump()
 
 
 # ============================================================

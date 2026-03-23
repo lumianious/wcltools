@@ -31,15 +31,32 @@ def _calc_active_time_pct(fight_duration: float, total_downtime: float) -> float
     return (fight_duration - total_downtime) / fight_duration * 100.0
 
 
+def _merge_intervals(
+    intervals: list[tuple[int, int]],
+) -> list[tuple[int, int]]:
+    """合并重叠/相邻的活动区间。"""
+    if not intervals:
+        return []
+    sorted_iv = sorted(intervals)
+    merged: list[tuple[int, int]] = [sorted_iv[0]]
+    for start, end in sorted_iv[1:]:
+        if start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+
 def _find_downtime_gaps(
-    cast_timestamps_ms: list[int],
+    activity_intervals: list[tuple[int, int]],
     fight_start_ms: int,
     fight_end_ms: int,
     gap_threshold_sec: float = 2.0,
 ) -> list[tuple[float, float, float]]:
     """
-    找出超过阈值的停工窗口。
+    根据活动区间找出停工窗口。
 
+    输入: activity_intervals = [(start_ms, end_ms), ...]
     返回 (start_sec, end_sec, duration_sec) 列表，
     其中时间为相对于 fight_start 的秒数。
     gap 必须严格大于 threshold 才算停工。
@@ -47,37 +64,32 @@ def _find_downtime_gaps(
     if fight_end_ms <= fight_start_ms:
         return []
 
-    sorted_ts = sorted(cast_timestamps_ms)
+    merged = _merge_intervals(activity_intervals)
     gaps: list[tuple[float, float, float]] = []
 
-    # 检查战斗开始到第一次施法的间隙
-    if not sorted_ts:
-        # 没有施法 → 整个战斗都是停工
+    if not merged:
         duration_sec = (fight_end_ms - fight_start_ms) / 1000.0
         if duration_sec > gap_threshold_sec:
             gaps.append((0.0, duration_sec, duration_sec))
         return gaps
 
-    # 战斗开始到第一次施法
-    first_gap_ms = sorted_ts[0] - fight_start_ms
-    first_gap_sec = first_gap_ms / 1000.0
+    # 战斗开始到第一个活动区间
+    first_gap_sec = (merged[0][0] - fight_start_ms) / 1000.0
     if first_gap_sec > gap_threshold_sec:
         gaps.append((0.0, first_gap_sec, first_gap_sec))
 
-    # 相邻施法之间的间隙
-    for i in range(1, len(sorted_ts)):
-        gap_ms = sorted_ts[i] - sorted_ts[i - 1]
-        gap_sec = gap_ms / 1000.0
+    # 合并后区间之间的间隙
+    for i in range(1, len(merged)):
+        gap_sec = (merged[i][0] - merged[i - 1][1]) / 1000.0
         if gap_sec > gap_threshold_sec:
-            start_sec = (sorted_ts[i - 1] - fight_start_ms) / 1000.0
-            end_sec = (sorted_ts[i] - fight_start_ms) / 1000.0
+            start_sec = (merged[i - 1][1] - fight_start_ms) / 1000.0
+            end_sec = (merged[i][0] - fight_start_ms) / 1000.0
             gaps.append((start_sec, end_sec, gap_sec))
 
-    # 最后一次施法到战斗结束
-    last_gap_ms = fight_end_ms - sorted_ts[-1]
-    last_gap_sec = last_gap_ms / 1000.0
+    # 最后一个活动区间到战斗结束
+    last_gap_sec = (fight_end_ms - merged[-1][1]) / 1000.0
     if last_gap_sec > gap_threshold_sec:
-        start_sec = (sorted_ts[-1] - fight_start_ms) / 1000.0
+        start_sec = (merged[-1][1] - fight_start_ms) / 1000.0
         end_sec = (fight_end_ms - fight_start_ms) / 1000.0
         gaps.append((start_sec, end_sec, last_gap_sec))
 
@@ -272,40 +284,44 @@ class TestCalcActiveTimePct:
 # 单元测试 — 停工窗口检测
 # ============================================================
 class TestFindDowntimeGaps:
-    """停工窗口检测逻辑。"""
+    """停工窗口检测逻辑（基于活动区间）。"""
+
+    @staticmethod
+    def _instant_intervals(timestamps_ms: list[int], gcd_ms: int = 1000) -> list[tuple[int, int]]:
+        """辅助: 将时间戳列表转为瞬发技能区间 (ts, ts+gcd)。"""
+        return [(ts, ts + gcd_ms) for ts in timestamps_ms]
 
     def test_no_gaps(self):
         """每 1.5 秒施法一次 → 无停工窗口"""
         fight_start = 0
-        fight_end = 30_000  # 30 秒
-        # 每 1500ms 施法一次
-        casts = list(range(0, 30_001, 1500))
-        gaps = _find_downtime_gaps(casts, fight_start, fight_end)
+        fight_end = 30_000
+        # 每 1500ms 施法一次, GCD 1000ms → 区间重叠，无间隙
+        intervals = self._instant_intervals(list(range(0, 30_001, 1500)))
+        gaps = _find_downtime_gaps(intervals, fight_start, fight_end)
         assert gaps == []
 
     def test_single_large_gap(self):
-        """中间有 10 秒间隙 → 检测到一个停工窗口"""
+        """中间有大间隙 → 检测到一个停工窗口"""
         fight_start = 0
         fight_end = 16_000
-        # 0s, 1s, 2s, 然后 12s 后才有下一次施法, 持续到战斗结束
-        casts = [0, 1000, 2000, 12000, 13000, 14000, 15000, 16000]
-        gaps = _find_downtime_gaps(casts, fight_start, fight_end)
-        # 2s → 12s 是 10 秒间隙
+        # 0-2s 持续施法，然后 12s 恢复
+        intervals = self._instant_intervals([0, 1000, 2000, 12000, 13000, 14000, 15000])
+        gaps = _find_downtime_gaps(intervals, fight_start, fight_end)
+        # 3s(2000+1000gcd) → 12s = 9s 间隙
         assert len(gaps) == 1
-        assert abs(gaps[0][2] - 10.0) < 0.01
+        assert abs(gaps[0][2] - 9.0) < 0.01
 
     def test_multiple_gaps(self):
         """多个间隙 → 检测到多个停工窗口"""
         fight_start = 0
         fight_end = 50_000
-        # 0s, 1s, 然后 8s, 9s, 然后 20s, 21s
-        casts = [0, 1000, 8000, 9000, 20000, 21000]
-        gaps = _find_downtime_gaps(casts, fight_start, fight_end)
-        # 间隙: 1s→8s (7s), 9s→20s (11s), 21s→50s (29s)
+        intervals = self._instant_intervals([0, 1000, 8000, 9000, 20000, 21000])
+        gaps = _find_downtime_gaps(intervals, fight_start, fight_end)
+        # 间隙: 2s→8s (6s), 10s→20s (10s), 22s→50s (28s)
         assert len(gaps) == 3
 
-    def test_empty_cast_list(self):
-        """无施法 → 整个战斗都是停工"""
+    def test_empty_intervals(self):
+        """无活动 → 整个战斗都是停工"""
         fight_start = 0
         fight_end = 30_000
         gaps = _find_downtime_gaps([], fight_start, fight_end)
@@ -316,48 +332,52 @@ class TestFindDowntimeGaps:
         """一次施法 → 检查开始和结束间隙"""
         fight_start = 0
         fight_end = 30_000
-        casts = [15_000]  # 15 秒处施法
-        gaps = _find_downtime_gaps(casts, fight_start, fight_end)
-        # 0→15s (15s) 和 15s→30s (15s)
+        intervals = [(15_000, 16_000)]  # 15s 处瞬发
+        gaps = _find_downtime_gaps(intervals, fight_start, fight_end)
+        # 0→15s (15s) 和 16s→30s (14s)
         assert len(gaps) == 2
         assert abs(gaps[0][2] - 15.0) < 0.01
-        assert abs(gaps[1][2] - 15.0) < 0.01
+        assert abs(gaps[1][2] - 14.0) < 0.01
 
     def test_gap_at_start(self):
-        """战斗开始 5 秒后才有第一次施法 → 检测到开始间隙"""
+        """战斗开始 5 秒后才有活动 → 检测到开始间隙"""
         fight_start = 0
         fight_end = 20_000
-        casts = [5000, 6000, 7000, 8000, 9000, 10000]
-        gaps = _find_downtime_gaps(casts, fight_start, fight_end)
-        # 开始间隙: 0→5s (5s)，结束间隙: 10s→20s (10s)
+        intervals = self._instant_intervals([5000, 6000, 7000, 8000, 9000, 10000])
+        gaps = _find_downtime_gaps(intervals, fight_start, fight_end)
+        # 开始间隙: 0→5s (5s)，结束间隙: 11s→20s (9s)
         assert len(gaps) == 2
         assert abs(gaps[0][2] - 5.0) < 0.01
 
     def test_gap_at_end(self):
-        """最后一次施法后 5 秒战斗才结束 → 检测到结束间隙"""
+        """最后活动后战斗继续 → 检测到结束间隙"""
         fight_start = 0
         fight_end = 20_000
-        casts = [0, 1000, 2000, 3000, 14000, 15000]
-        gaps = _find_downtime_gaps(casts, fight_start, fight_end)
-        # 结束间隙: 15s→20s (5s)，中间间隙: 3s→14s (11s)
+        intervals = self._instant_intervals([0, 1000, 2000, 3000, 14000, 15000])
+        gaps = _find_downtime_gaps(intervals, fight_start, fight_end)
+        # 中间间隙: 4s→14s (10s)，结束间隙: 16s→20s (4s)
         assert len(gaps) == 2
+        assert abs(gaps[0][2] - 10.0) < 0.01
+        assert abs(gaps[1][2] - 4.0) < 0.01
 
     def test_exactly_at_threshold_not_downtime(self):
         """恰好 2.0 秒间隙 → 不算停工（必须严格大于阈值）"""
         fight_start = 0
         fight_end = 10_000
-        # 施法 0s, 2s, 4s, 6s, 8s → 间隙恰好 2.0s
-        casts = [0, 2000, 4000, 6000, 8000, 10000]
-        gaps = _find_downtime_gaps(casts, fight_start, fight_end)
+        # 区间 (0,1000), (3000,4000), (6000,7000), (9000,10000)
+        # 间隙: 1s→3s (2.0s), 4s→6s (2.0s), 7s→9s (2.0s)
+        intervals = [(0, 1000), (3000, 4000), (6000, 7000), (9000, 10000)]
+        gaps = _find_downtime_gaps(intervals, fight_start, fight_end)
         assert gaps == []
 
     def test_just_over_threshold_is_downtime(self):
         """2.1 秒间隙 → 算停工"""
         fight_start = 0
         fight_end = 10_000
-        casts = [0, 2100]
-        gaps = _find_downtime_gaps(casts, fight_start, fight_end, gap_threshold_sec=2.0)
-        # 间隙: 0→2.1s (2.1s)，2.1s→10s (7.9s)
+        # 区间 (0,1000) 然后 (3100,4100)，间隙 1s→3.1s = 2.1s
+        intervals = [(0, 1000), (3100, 4100)]
+        gaps = _find_downtime_gaps(intervals, fight_start, fight_end, gap_threshold_sec=2.0)
+        # 间隙: 1.0→3.1s (2.1s)，4.1→10s (5.9s)
         assert len(gaps) == 2
         assert abs(gaps[0][2] - 2.1) < 0.01
 
@@ -503,6 +523,66 @@ class TestPlayerAnalysisResponseDowntime:
         assert rebuilt.downtime.benchmark_active_time_pct == 92.0
         assert len(rebuilt.downtime.downtime_windows) == 2
         assert rebuilt.downtime.verdict == "ok"
+
+
+# ============================================================
+# 单元测试 — begincast 事件修复 downtime 误判
+# ============================================================
+class TestBegincastFixesDowntime:
+    """验证使用活动区间后，读条期间不再被误判为停工。"""
+
+    def test_wrath_casting_with_intervals_no_false_positive(self):
+        """begincast→cast 区间：连续 Wrath 读条不再被误判为停工"""
+        fight_start = 0
+        fight_end = 15_000
+        # Wrath 读条 1.5s，反应间隔 ~100ms
+        # 每个 begincast→cast 区间覆盖整个读条时间
+        intervals = [
+            (0, 1500),       # Wrath #1: begincast→cast
+            (1600, 3100),    # Wrath #2
+            (3200, 4700),    # Wrath #3
+            (4800, 6300),    # Wrath #4
+            (6400, 7900),    # Wrath #5
+            (8000, 9500),    # Wrath #6
+            (9600, 11100),   # Wrath #7
+            (11200, 12700),  # Wrath #8
+        ]
+        gaps = _find_downtime_gaps(intervals, fight_start, fight_end)
+        # 区间间隔全部 100ms，远小于 2.0s
+        # 只有末尾 12700→15000 = 2.3s 算停工
+        assert len(gaps) == 1, "只有战斗末尾应有停工窗口"
+        assert abs(gaps[0][0] - 12.7) < 0.01
+
+    def test_starfire_long_cast_no_false_positive(self):
+        """Starfire 2.5s 读条 → begincast→cast 区间覆盖，不是停工"""
+        fight_start = 0
+        fight_end = 10_000
+        intervals = [
+            (0, 2500),      # Starfire: 2.5s 读条
+            (2600, 5100),   # Starfire: 2.5s 读条
+            (5200, 7700),   # Starfire: 2.5s 读条
+        ]
+        gaps = _find_downtime_gaps(intervals, fight_start, fight_end)
+        # 区间间隔 100ms，只有末尾 7700→10000 = 2.3s
+        assert len(gaps) == 1
+        assert abs(gaps[0][2] - 2.3) < 0.01
+
+    def test_cancelled_cast_as_short_interval(self):
+        """取消施法产生短区间（≈GCD），仍算活动"""
+        fight_start = 0
+        fight_end = 10_000
+        intervals = [
+            (0, 1000),      # cancelled Wrath (占用 ~1 GCD)
+            (800, 1800),    # cancelled Wrath (重叠)
+            (1600, 3100),   # Wrath: begincast→cast
+            (3200, 5700),   # Starfire: begincast→cast (2.5s)
+            (5800, 7300),   # Wrath: begincast→cast
+        ]
+        gaps = _find_downtime_gaps(intervals, fight_start, fight_end)
+        # 合并后: (0, 3100), (3200, 5700), (5800, 7300)
+        # 间隙: 3100→3200 (0.1s), 5700→5800 (0.1s), 7300→10000 (2.7s)
+        assert len(gaps) == 1
+        assert abs(gaps[0][2] - 2.7) < 0.01
 
 
 # ============================================================
