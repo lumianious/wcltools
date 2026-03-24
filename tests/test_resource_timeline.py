@@ -366,3 +366,303 @@ class TestResourceTimelineIntegration:
         assert data["points"] == []
         assert data["total_points"] == 0
         assert data["overflow_count"] == 0
+
+
+# ============================================================
+# 集成测试 — get_resource_timeline 工具完整管线
+# 使用 MockWCLClient 模拟 WCL API 返回，验证端到端行为
+# ============================================================
+
+
+from tests.conftest import MockWCLClient
+from src.tools.resource_timeline import get_resource_timeline
+
+
+# ----------------------------------------------------------
+# 共享 mock 数据工厂
+# ----------------------------------------------------------
+
+def _make_fight_response(
+    start_time: int = 100000, end_time: int = 200000, fight_id: int = 3,
+) -> dict:
+    """构造 fights 查询的 mock 响应"""
+    return {
+        "reportData": {
+            "report": {
+                "fights": [
+                    {
+                        "startTime": start_time,
+                        "endTime": end_time,
+                        "kill": True,
+                        "encounterID": 2902,
+                        "name": "Test Boss",
+                    }
+                ]
+            }
+        }
+    }
+
+
+def _make_master_data_response(
+    actors: list[dict] | None = None,
+    abilities: list[dict] | None = None,
+) -> dict:
+    """构造 masterData 查询的 mock 响应"""
+    if actors is None:
+        actors = [
+            {"id": 1, "name": "Moonkin", "server": "Illidan", "subType": "Druid"},
+            {"id": 2, "name": "Warrior", "server": "Illidan", "subType": "Warrior"},
+        ]
+    if abilities is None:
+        abilities = [
+            {"gameID": 190984, "name": "Wrath"},
+            {"gameID": 78674, "name": "Starsurge"},
+            {"gameID": 194153, "name": "Starfire"},
+        ]
+    return {
+        "reportData": {
+            "report": {
+                "masterData": {
+                    "actors": actors,
+                    "abilities": abilities,
+                }
+            }
+        }
+    }
+
+
+def _make_resource_events_response(
+    events: list[dict] | None = None,
+    next_page: int | None = None,
+) -> dict:
+    """构造 dataType: Resources 查询的 mock 响应"""
+    if events is None:
+        events = []
+    return {
+        "reportData": {
+            "report": {
+                "events": {
+                    "data": events,
+                    "nextPageTimestamp": next_page,
+                }
+            }
+        }
+    }
+
+
+def _build_resource_event(
+    timestamp: int,
+    resource_change_type: int = 8,
+    resource_change: int = 15,
+    waste: int = 0,
+    max_resource_amount: int = 1200,
+    ability_game_id: int = 190984,
+) -> dict:
+    """构造单个 resourcechange 事件"""
+    return {
+        "type": "resourcechange",
+        "resourceChangeType": resource_change_type,
+        "resourceChange": resource_change,
+        "waste": waste,
+        "maxResourceAmount": max_resource_amount,
+        "abilityGameID": ability_game_id,
+        "timestamp": timestamp,
+    }
+
+
+# ----------------------------------------------------------
+# 辅助: 配置 client 的标准 3 查询
+# ----------------------------------------------------------
+
+
+def _setup_standard_client(
+    events: list[dict] | None = None,
+    fight_start: int = 100000,
+    fight_end: int = 200000,
+    actors: list[dict] | None = None,
+    abilities: list[dict] | None = None,
+) -> MockWCLClient:
+    """配置 fights + masterData + Resources 三层 mock"""
+    client = MockWCLClient()
+    client.set_response("fights", _make_fight_response(fight_start, fight_end))
+    client.set_response("masterData", _make_master_data_response(actors, abilities))
+    client.set_response(
+        "dataType: Resources",
+        _make_resource_events_response(events),
+    )
+    return client
+
+
+# ============================================================
+# 集成测试类
+# ============================================================
+
+
+class TestGetResourceTimelineIntegration:
+    """get_resource_timeline 工具端到端集成测试。"""
+
+    # ----------------------------------------------------------
+    # 1. 基本管线: mock 所有 3 查询，验证响应字段
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_basic_resource_timeline(self):
+        """完整管线: 3 个 mock 查询 -> ResourceTimelineResponse 字段正确"""
+        events = [
+            _build_resource_event(timestamp=101000, resource_change=15, waste=0),
+            _build_resource_event(timestamp=105000, resource_change=20, waste=0,
+                                  ability_game_id=78674),
+            _build_resource_event(timestamp=110000, resource_change=10, waste=0,
+                                  ability_game_id=194153),
+        ]
+        client = _setup_standard_client(events=events)
+
+        resp = await get_resource_timeline(
+            client, "ABC123", fight_id=3, player="Moonkin", resource_type="auto",
+        )
+
+        assert resp.report_code == "ABC123"
+        assert resp.fight_id == 3
+        assert resp.player_name == "Moonkin"
+        assert resp.fight_duration == 100.0  # (200000 - 100000) / 1000
+        assert resp.total_points == 3
+        assert resp.overflow_count == 0
+        assert resp.overflow_pct == 0.0
+        assert len(resp.points) == 3
+        # 验证第一个数据点
+        p0 = resp.points[0]
+        assert p0.timestamp_sec == 1.0  # (101000 - 100000) / 1000
+        assert p0.spell_name == "Wrath"
+        assert p0.is_overflow is False
+        # 验证第二个数据点
+        p1 = resp.points[1]
+        assert p1.timestamp_sec == 5.0
+        assert p1.spell_name == "Starsurge"
+
+    # ----------------------------------------------------------
+    # 2. 溢出检测: waste > 0 的事件被标记为溢出
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_overflow_detection(self):
+        """waste > 0 的事件 -> is_overflow=True，overflow_count 和 overflow_pct 正确"""
+        events = [
+            _build_resource_event(timestamp=101000, resource_change=15, waste=0),
+            _build_resource_event(timestamp=105000, resource_change=20, waste=5),
+            _build_resource_event(timestamp=110000, resource_change=10, waste=0),
+            _build_resource_event(timestamp=115000, resource_change=25, waste=8),
+        ]
+        client = _setup_standard_client(events=events)
+
+        resp = await get_resource_timeline(
+            client, "ABC123", fight_id=3, player="Moonkin",
+        )
+
+        assert resp.total_points == 4
+        assert resp.overflow_count == 2
+        # 2 / 4 * 100 = 50.0%
+        assert resp.overflow_pct == 50.0
+        # 验证具体标记
+        assert resp.points[0].is_overflow is False
+        assert resp.points[1].is_overflow is True
+        assert resp.points[2].is_overflow is False
+        assert resp.points[3].is_overflow is True
+
+    # ----------------------------------------------------------
+    # 3. 自动资源类型: resource_type="auto" 返回检测到的类型名称
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_auto_resource_type(self):
+        """resource_type='auto' -> 检测到的资源类型名称为 resource_type_8"""
+        events = [
+            _build_resource_event(timestamp=101000, resource_change_type=8),
+            _build_resource_event(timestamp=105000, resource_change_type=8),
+        ]
+        client = _setup_standard_client(events=events)
+
+        resp = await get_resource_timeline(
+            client, "ABC123", fight_id=3, player="Moonkin", resource_type="auto",
+        )
+
+        # auto 模式下，类型名称为 "resource_type_{id}"
+        assert resp.resource_type == "resource_type_8"
+
+    # ----------------------------------------------------------
+    # 4. 空事件: 没有资源事件 -> 空响应
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_empty_events(self):
+        """无资源事件 -> total_points=0, points=[]"""
+        client = _setup_standard_client(events=[])
+
+        resp = await get_resource_timeline(
+            client, "ABC123", fight_id=3, player="Moonkin",
+        )
+
+        assert resp.total_points == 0
+        assert resp.points == []
+        assert resp.overflow_count == 0
+        assert resp.overflow_pct == 0.0
+        assert resp.fight_duration == 100.0
+        # resource_type 应为传入的默认值 "auto"
+        assert resp.resource_type == "auto"
+
+    # ----------------------------------------------------------
+    # 5. 玩家未找到: 抛出 ValueError
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_player_not_found(self):
+        """玩家名称不匹配任何 actor -> 抛出 ValueError"""
+        client = _setup_standard_client(events=[])
+
+        with pytest.raises(ValueError, match="未找到玩家"):
+            await get_resource_timeline(
+                client, "ABC123", fight_id=3, player="NonExistentPlayer",
+            )
+
+    # ----------------------------------------------------------
+    # 6. 战斗未找到: 空 fights 列表 -> 抛出 ValueError
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_fight_not_found(self):
+        """空 fights 列表 -> 抛出 ValueError"""
+        client = MockWCLClient()
+        # fights 返回空列表
+        client.set_response("fights", {
+            "reportData": {"report": {"fights": []}}
+        })
+        client.set_response("masterData", _make_master_data_response())
+        client.set_response("dataType: Resources", _make_resource_events_response())
+
+        with pytest.raises(ValueError, match="未找到战斗"):
+            await get_resource_timeline(
+                client, "ABC123", fight_id=99, player="Moonkin",
+            )
+
+    # ----------------------------------------------------------
+    # 7. 最大值归一化: WCL x10 存储 -> 自动除以 10
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_max_value_normalization(self):
+        """maxResourceAmount > 200 且 %10==0 -> 归一化为 /10"""
+        events = [
+            # 1200 -> 归一化为 120（星界能量上限）
+            _build_resource_event(timestamp=101000, max_resource_amount=1200),
+            # 1000 -> 归一化为 100（怒气上限）
+            _build_resource_event(timestamp=105000, max_resource_amount=1000),
+            # 100 -> 不归一化（不超过 200）
+            _build_resource_event(timestamp=110000, max_resource_amount=100),
+            # 250 -> 归一化为 25（max > 200 且 %10==0）
+            _build_resource_event(timestamp=115000, max_resource_amount=250),
+            # 205 -> 不归一化（%10 != 0）
+            _build_resource_event(timestamp=120000, max_resource_amount=205),
+        ]
+        client = _setup_standard_client(events=events)
+
+        resp = await get_resource_timeline(
+            client, "ABC123", fight_id=3, player="Moonkin",
+        )
+
+        assert resp.points[0].max_value == 120   # 1200 / 10
+        assert resp.points[1].max_value == 100   # 1000 / 10
+        assert resp.points[2].max_value == 100   # 不归一化，保持 100
+        assert resp.points[3].max_value == 25    # 250 / 10
+        assert resp.points[4].max_value == 205   # 不归一化，%10 != 0

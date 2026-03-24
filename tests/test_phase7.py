@@ -759,3 +759,8 @@ class TestToolRegistration:
         """get_resource_timeline 工具已注册"""
         from src.server import get_resource_timeline
         assert callable(get_resource_timeline)
+
+    def test_boss_cast_timeline_tool_exists(self):
+        """get_boss_cast_timeline 工具已注册"""
+        from src.server import get_boss_cast_timeline
+        assert callable(get_boss_cast_timeline)

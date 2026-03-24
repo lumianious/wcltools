@@ -914,9 +914,9 @@ class TestBuildCrossClassFiltering:
         ]
 
         # Mock get_talent_spec: ID 300 返回术士专精（"痛苦"），不属于德鲁伊
-        with patch("src.tools.analyze.get_talent_spec") as mock_spec, \
-             patch("src.tools.analyze.get_class_spec_names") as mock_names, \
-             patch("src.tools.analyze.get_talent_name") as mock_name:
+        with patch("src.tools._analysis_comparisons.get_talent_spec") as mock_spec, \
+             patch("src.tools._analysis_comparisons.get_class_spec_names") as mock_names, \
+             patch("src.tools._analysis_comparisons.get_talent_name") as mock_name:
             mock_names.return_value = {"平衡", "野性", "守护", "恢复"}
             # ID 300 属于术士（"痛苦"专精），不在德鲁伊专精集合中
             mock_spec.return_value = "痛苦"
@@ -947,9 +947,9 @@ class TestBuildCrossClassFiltering:
             {"id": 200, "talentID": 200},
         ]
 
-        with patch("src.tools.analyze.get_talent_spec") as mock_spec, \
-             patch("src.tools.analyze.get_class_spec_names") as mock_names, \
-             patch("src.tools.analyze.get_talent_name") as mock_name:
+        with patch("src.tools._analysis_comparisons.get_talent_spec") as mock_spec, \
+             patch("src.tools._analysis_comparisons.get_class_spec_names") as mock_names, \
+             patch("src.tools._analysis_comparisons.get_talent_name") as mock_name:
             mock_names.return_value = {"平衡", "野性", "守护", "恢复"}
             # ID 300 属于德鲁伊（"平衡"专精）
             mock_spec.return_value = "平衡"
@@ -997,9 +997,9 @@ class TestCooldownMutualExclusion:
             {"id": 88206, "talentID": 88206},  # Incarnation talent entry
         ]
 
-        with patch("src.tools.analyze.get_talent_spell_id") as mock_tsid, \
-             patch("src.tools.analyze.get_talent_id_by_spell") as mock_tid, \
-             patch("src.tools.analyze.get_spec_spells") as mock_spells:
+        with patch("src.tools._analysis_comparisons.get_talent_spell_id") as mock_tsid, \
+             patch("src.tools._analysis_comparisons.get_talent_id_by_spell") as mock_tid, \
+             patch("src.tools._analysis_comparisons.get_spec_spells") as mock_spells:
             # Incarnation talent entry 88206 → spell_id 102560
             mock_tsid.return_value = 102560
             # Convoke spell_id 391528 → 有对应天赋条目
@@ -1042,9 +1042,9 @@ class TestCooldownMutualExclusion:
             {"id": 77777, "talentID": 77777},  # Convoke talent entry
         ]
 
-        with patch("src.tools.analyze.get_talent_spell_id") as mock_tsid, \
-             patch("src.tools.analyze.get_talent_id_by_spell") as mock_tid, \
-             patch("src.tools.analyze.get_spec_spells") as mock_spells:
+        with patch("src.tools._analysis_comparisons.get_talent_spell_id") as mock_tsid, \
+             patch("src.tools._analysis_comparisons.get_talent_id_by_spell") as mock_tid, \
+             patch("src.tools._analysis_comparisons.get_spec_spells") as mock_spells:
             # Convoke talent entry 77777 → spell_id 391528
             mock_tsid.return_value = 391528
             # Convoke spell_id 391528 → 有对应天赋条目
@@ -1085,9 +1085,9 @@ class TestCooldownMutualExclusion:
 
         player_talents = [{"id": 88206, "talentID": 88206}]
 
-        with patch("src.tools.analyze.get_talent_spell_id") as mock_tsid, \
-             patch("src.tools.analyze.get_talent_id_by_spell") as mock_tid, \
-             patch("src.tools.analyze.get_spec_spells") as mock_spells:
+        with patch("src.tools._analysis_comparisons.get_talent_spell_id") as mock_tsid, \
+             patch("src.tools._analysis_comparisons.get_talent_id_by_spell") as mock_tid, \
+             patch("src.tools._analysis_comparisons.get_spec_spells") as mock_spells:
             mock_tsid.return_value = 102560
             # Celestial Alignment 非天赋授予技能
             mock_tid.return_value = None

@@ -21,7 +21,7 @@ from __future__ import annotations
 import logging
 import statistics
 from collections import defaultdict
-from typing import Any, Optional
+from typing import Optional
 
 # ============================================================
 # 本地模块
@@ -279,19 +279,15 @@ async def _query_damage_events(
     """
     all_events: list[dict] = []
     next_ts: Optional[int] = start_time or 0
+    end_val = end_time if end_time is not None else 99999999
 
     while next_ts is not None:
-        time_filter = f"startTime: {next_ts}"
-        if end_time is not None:
-            time_filter += f"\n                        endTime: {end_time}"
-        else:
-            time_filter += "\n                        endTime: 99999999"
-
         gql = f"""
             reportData {{
                 report(code: "{report_code}") {{
                     events(
-                        {time_filter}
+                        startTime: {next_ts}
+                        endTime: {end_val}
                         fightIDs: [{fight_id}]
                         dataType: DamageDone
                         sourceID: {source_id}
@@ -306,8 +302,7 @@ async def _query_damage_events(
         data = await client.query(gql)
         report = data.get("reportData", {}).get("report", {})
         events_block = report.get("events", {})
-        page_data = events_block.get("data", [])
-        all_events.extend(page_data)
+        all_events.extend(events_block.get("data", []))
         next_ts = events_block.get("nextPageTimestamp")
 
     return all_events
@@ -334,11 +329,9 @@ async def _collect_cast_data(
     # 按 report code 分组
     report_groups: dict[str, list[dict]] = defaultdict(list)
     for r in rankings:
-        report = r.get("report", {})
-        code = report.get("code")
-        if not code:
-            continue
-        report_groups[code].append(r)
+        code = r.get("report", {}).get("code")
+        if code:
+            report_groups[code].append(r)
 
     all_casts: list[dict] = []
     fight_durations: list[float] = []
@@ -352,55 +345,57 @@ async def _collect_cast_data(
             continue
 
         for r in group:
-            player_name = r.get("name", "")
-            fight_id = r.get("report", {}).get("fightID")
-            duration = r.get("duration", 0)
-            if not fight_id:
-                continue
-
-            # 记录战斗时长
-            dur_sec = duration / 1000.0 if duration > 1000 else duration
-            if dur_sec > 0:
-                fight_durations.append(dur_sec)
-
-            # 匹配 actor
-            actor_id = _find_actor_id(actors, player_name)
-            if actor_id is None:
-                logger.debug(
-                    "未找到玩家 %s 在报告 %s 中",
-                    player_name, code,
-                )
-                continue
-
-            # 查询施法事件
-            try:
-                events = await _query_cast_events(
-                    client, code, fight_id, actor_id
-                )
-            except Exception as exc:
-                logger.warning(
-                    "事件查询失败 %s/%s: %s",
-                    code, player_name, exc,
-                )
-                continue
-
-            # 提取战斗开始时间（第一个事件的时间戳）
-            fight_start = _get_fight_start(events)
-
-            # 过滤并收集追踪技能的施法
-            for evt in events:
-                spell_id = evt.get("abilityGameID")
-                if spell_id not in tracked_spell_ids:
-                    continue
-                ts = evt.get("timestamp", 0)
-                relative = (ts - fight_start) / 1000.0
-                all_casts.append({
-                    "player": player_name,
-                    "spell_id": spell_id,
-                    "relative_sec": relative,
-                })
+            casts, dur = await _fetch_player_casts(
+                client, code, r, actors, tracked_spell_ids
+            )
+            all_casts.extend(casts)
+            if dur > 0:
+                fight_durations.append(dur)
 
     return all_casts, fight_durations
+
+
+async def _fetch_player_casts(
+    client: WCLClient,
+    report_code: str,
+    ranking: dict,
+    actors: list[dict],
+    tracked_spell_ids: set[int],
+) -> tuple[list[dict], float]:
+    """获取单个玩家的施法数据。查询失败时返回空列表和 0。"""
+    player_name = ranking.get("name", "")
+    fight_id = ranking.get("report", {}).get("fightID")
+    duration = ranking.get("duration", 0)
+    if not fight_id:
+        return [], 0.0
+
+    dur_sec = duration / 1000.0 if duration > 1000 else float(duration)
+
+    actor_id = _find_actor_id(actors, player_name)
+    if actor_id is None:
+        logger.debug("未找到玩家 %s 在报告 %s 中", player_name, report_code)
+        return [], 0.0
+
+    try:
+        events = await _query_cast_events(
+            client, report_code, fight_id, actor_id
+        )
+    except Exception as exc:
+        logger.warning("事件查询失败 %s/%s: %s", report_code, player_name, exc)
+        return [], 0.0
+
+    # 过滤追踪技能，转为相对时间
+    fight_start = _get_fight_start(events)
+    casts: list[dict] = [
+        {
+            "player": player_name,
+            "spell_id": evt.get("abilityGameID"),
+            "relative_sec": (evt.get("timestamp", 0) - fight_start) / 1000.0,
+        }
+        for evt in events
+        if evt.get("abilityGameID") in tracked_spell_ids
+    ]
+    return casts, dur_sec
 
 
 def _get_fight_start(events: list[dict]) -> int:
@@ -500,6 +495,39 @@ def _compute_co_usage(
 
     对聚类内每次施法，检查同玩家 ±3s 内是否有其他追踪技能。
     """
+    co_counts, total = _find_co_used_pairs(
+        casts, spell_id, cluster_ts_range, tracked_spells
+    )
+    if total == 0:
+        return []
+
+    result: list[CoUsage] = []
+    for sid, count in sorted(
+        co_counts.items(), key=lambda x: x[1], reverse=True
+    ):
+        name = tracked_spells.get(sid, {}).get("name", "")
+        if not name:
+            name = get_spell_name(sid) or f"Spell {sid}"
+        rate = round(count / total * 100, 1)
+        if rate >= 10:  # 只报告 >= 10% 的共用
+            result.append(CoUsage(ability=name, rate=rate))
+
+    return result[:5]
+
+
+def _find_co_used_pairs(
+    casts: list[dict],
+    spell_id: int,
+    cluster_ts_range: tuple[float, float],
+    tracked_spells: dict[int, dict],
+) -> tuple[dict[int, int], int]:
+    """
+    检测聚类内与目标技能共用的其他技能。
+
+    返回 (co_counts, total_in_cluster):
+      - co_counts: {其他技能ID: 共用次数}
+      - total_in_cluster: 聚类内使用该技能的玩家数
+    """
     # 按玩家分组所有施法
     player_casts: dict[str, list[dict]] = defaultdict(list)
     for c in casts:
@@ -509,7 +537,7 @@ def _compute_co_usage(
     co_counts: dict[int, int] = defaultdict(int)
     total_in_cluster = 0
 
-    for player, pcasts in player_casts.items():
+    for _player, pcasts in player_casts.items():
         # 找到该玩家在聚类时间范围内的目标技能施法
         target_casts = [
             c for c in pcasts
@@ -532,21 +560,7 @@ def _compute_co_usage(
                     co_counts[oc["spell_id"]] += 1
                     break  # 每个共用技能每次只计一次
 
-    if total_in_cluster == 0:
-        return []
-
-    result: list[CoUsage] = []
-    for sid, count in sorted(
-        co_counts.items(), key=lambda x: x[1], reverse=True
-    ):
-        name = tracked_spells.get(sid, {}).get("name", "")
-        if not name:
-            name = get_spell_name(sid) or f"Spell {sid}"
-        rate = round(count / total_in_cluster * 100, 1)
-        if rate >= 10:  # 只报告 >= 10% 的共用
-            result.append(CoUsage(ability=name, rate=rate))
-
-    return result[:5]
+    return co_counts, total_in_cluster
 
 
 # ============================================================
@@ -579,63 +593,26 @@ def _aggregate_ability(
     total_players: int,
 ) -> AbilityTimeline:
     """为单个技能聚合施法时间线。"""
-    # 过滤该技能的施法
-    ability_casts = [
-        c for c in all_casts if c["spell_id"] == spell_id
-    ]
+    ability_casts = [c for c in all_casts if c["spell_id"] == spell_id]
+    total_casts = _compute_ability_stats(ability_casts)
 
-    # 统计每位玩家的施法次数
-    player_counts: dict[str, int] = defaultdict(int)
-    for c in ability_casts:
-        player_counts[c["player"]] += 1
-
-    # 总施法次数统计
-    counts = list(player_counts.values())
-    total_casts: dict[str, float] = {}
-    if counts:
-        total_casts["median"] = round(statistics.median(counts), 1)
-        total_casts["min"] = float(min(counts))
-        total_casts["max"] = float(max(counts))
-
-    # 聚类分析
-    timestamps = [c["relative_sec"] for c in ability_casts]
-    raw_clusters = _cluster_timestamps(timestamps)
-
-    # 构建 CastCluster 对象，计算每个聚类中的独立玩家数
-    cast_clusters: list[CastCluster] = []
-    for cluster_ts in raw_clusters:
-        lo, hi = min(cluster_ts), max(cluster_ts)
-        # 计算聚类内独立玩家数
-        players_in = set()
-        for c in ability_casts:
-            if lo <= c["relative_sec"] <= hi:
-                players_in.add(c["player"])
-        cluster = _build_cluster(
-            cluster_ts, total_players, len(players_in)
-        )
-        # 共用技能
-        cluster.co_used = _compute_co_usage(
-            all_casts, spell_id, (lo, hi), tracked_spells
-        )
-        cast_clusters.append(cluster)
-
-    # Hold 检测
+    # 聚类分析 + hold 检测
+    cast_clusters = _cluster_ability_casts(
+        ability_casts, all_casts, spell_id,
+        spell_info, tracked_spells, total_players,
+    )
     cd_sec = spell_info.get("cd_seconds", 0)
     _detect_holds(cast_clusters, cd_sec)
 
-    # utility 类技能限制聚类数量，按 player_pct 降序保留前 N 个
+    # utility 类技能限制聚类数量
     if spell_info.get("ability_type") == "utility":
         cast_clusters.sort(key=lambda c: c.player_pct, reverse=True)
         cast_clusters = cast_clusters[:MAX_UTILITY_CLUSTERS]
-        # 按时间重新排序
         cast_clusters.sort(key=lambda c: c.median_time)
 
     # 添加标签
     for i, c in enumerate(cast_clusters):
         c.label = f"Cast {i + 1}"
-
-    # 共识
-    consensus = _generate_consensus(cast_clusters)
 
     return AbilityTimeline(
         name=spell_info.get("name", f"Spell {spell_id}"),
@@ -643,8 +620,53 @@ def _aggregate_ability(
         cd_seconds=cd_sec,
         total_casts=total_casts,
         cast_clusters=cast_clusters,
-        consensus=consensus,
+        consensus=_generate_consensus(cast_clusters),
     )
+
+
+def _compute_ability_stats(ability_casts: list[dict]) -> dict[str, float]:
+    """统计每位玩家的施法次数，返回 median/min/max。"""
+    player_counts: dict[str, int] = defaultdict(int)
+    for c in ability_casts:
+        player_counts[c["player"]] += 1
+
+    counts = list(player_counts.values())
+    if not counts:
+        return {}
+    return {
+        "median": round(statistics.median(counts), 1),
+        "min": float(min(counts)),
+        "max": float(max(counts)),
+    }
+
+
+def _cluster_ability_casts(
+    ability_casts: list[dict],
+    all_casts: list[dict],
+    spell_id: int,
+    spell_info: dict,
+    tracked_spells: dict[int, dict],
+    total_players: int,
+) -> list[CastCluster]:
+    """对单个技能的施法进行聚类，并计算共用技能。"""
+    timestamps = [c["relative_sec"] for c in ability_casts]
+    raw_clusters = _cluster_timestamps(timestamps)
+
+    cast_clusters: list[CastCluster] = []
+    for cluster_ts in raw_clusters:
+        lo, hi = min(cluster_ts), max(cluster_ts)
+        # 计算聚类内独立玩家数
+        players_in = {
+            c["player"] for c in ability_casts
+            if lo <= c["relative_sec"] <= hi
+        }
+        cluster = _build_cluster(cluster_ts, total_players, len(players_in))
+        cluster.co_used = _compute_co_usage(
+            all_casts, spell_id, (lo, hi), tracked_spells
+        )
+        cast_clusters.append(cluster)
+
+    return cast_clusters
 
 
 # ============================================================
@@ -710,19 +732,13 @@ async def _fetch_and_aggregate(
     cache_key: str,
 ) -> CooldownTimelineResponse:
     """执行实际的数据获取与聚合（从公开接口分离以控制函数长度）。"""
-    # ---- Step 1: 解析参数 ----
     class_name, spec_name = _parse_spec(spec)
     diff_id = DIFFICULTY_MAP.get(difficulty, 4)
 
-    # ---- Step 2: 确定追踪技能 ----
+    # 确定追踪技能
     tracked_spells = _build_tracked_spells(spec, abilities)
     if not tracked_spells:
-        return CooldownTimelineResponse(
-            spec=spec,
-            encounter=f"Encounter {encounter_id}",
-            difficulty=difficulty,
-            sample_size=0,
-        )
+        return _empty_response(spec, f"Encounter {encounter_id}", difficulty)
 
     tracked_ids = set(tracked_spells.keys())
     logger.info(
@@ -731,20 +747,14 @@ async def _fetch_and_aggregate(
         ", ".join(s["name"] for s in tracked_spells.values()),
     )
 
-    # ---- Step 3: 获取排行榜 ----
+    # 获取排行榜
     enc_name, rankings = await _query_rankings(
-        client, encounter_id, class_name, spec_name,
-        diff_id, sample_size,
+        client, encounter_id, class_name, spec_name, diff_id, sample_size,
     )
     if not rankings:
-        return CooldownTimelineResponse(
-            spec=spec,
-            encounter=enc_name or f"Encounter {encounter_id}",
-            difficulty=difficulty,
-            sample_size=0,
-        )
+        return _empty_response(spec, enc_name or f"Encounter {encounter_id}", difficulty)
 
-    # ---- Step 4: 批量获取施法数据 ----
+    # 批量获取施法数据
     all_casts, fight_durations = await _collect_cast_data(
         client, rankings, tracked_ids
     )
@@ -753,31 +763,54 @@ async def _fetch_and_aggregate(
         len(all_casts), len(fight_durations),
     )
 
-    # ---- Step 5: 聚合每个技能 ----
+    # 聚合 + 构建响应
+    return _build_timeline_response(
+        spec, enc_name or f"Encounter {encounter_id}", difficulty,
+        rankings, tracked_spells, all_casts, fight_durations, cache_key,
+    )
+
+
+def _empty_response(
+    spec: str, encounter: str, difficulty: str,
+) -> CooldownTimelineResponse:
+    """构建无数据的空响应。"""
+    return CooldownTimelineResponse(
+        spec=spec, encounter=encounter,
+        difficulty=difficulty, sample_size=0,
+    )
+
+
+def _build_timeline_response(
+    spec: str,
+    encounter: str,
+    difficulty: str,
+    rankings: list[dict],
+    tracked_spells: dict[int, dict],
+    all_casts: list[dict],
+    fight_durations: list[float],
+    cache_key: str,
+) -> CooldownTimelineResponse:
+    """聚合所有技能时间线并构建最终响应。"""
     total_players = len(rankings)
     ability_timelines: list[AbilityTimeline] = []
     for sid, info in tracked_spells.items():
         timeline = _aggregate_ability(
             sid, info, all_casts, tracked_spells, total_players
         )
-        # 只保留有数据的技能
         if timeline.cast_clusters:
             ability_timelines.append(timeline)
 
-    # ---- Step 6: 构建响应 ----
     median_dur = (
         round(statistics.median(fight_durations), 1)
         if fight_durations else 0.0
     )
     response = CooldownTimelineResponse(
         spec=spec,
-        encounter=enc_name or f"Encounter {encounter_id}",
+        encounter=encounter,
         difficulty=difficulty,
         sample_size=total_players,
         median_fight_duration=median_dur,
         abilities=ability_timelines,
     )
-
-    # ---- 写入缓存 ----
     cache_set(cache_key, response.model_dump())
     return response

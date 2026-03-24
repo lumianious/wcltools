@@ -340,3 +340,297 @@ class TestCastSequenceIntegration:
         assert data["casts"] == []
         assert data["total_casts"] == 0
         assert data["fight_duration"] == 0.0
+
+
+# ============================================================
+# 集成测试 — get_cast_sequence 完整工具管线（MockWCLClient）
+# ============================================================
+
+from tests.conftest import MockWCLClient
+from src.tools.cast_sequence import get_cast_sequence
+
+
+# ----------------------------------------------------------
+# 共享 mock 数据
+# ----------------------------------------------------------
+
+_FIGHT_RESPONSE = {
+    "reportData": {
+        "report": {
+            "fights": [{
+                "startTime": 100000,
+                "endTime": 130000,
+                "encounterID": 3001,
+                "name": "Test Boss",
+                "kill": True,
+            }]
+        }
+    }
+}
+
+_MASTER_DATA_RESPONSE = {
+    "reportData": {
+        "report": {
+            "masterData": {
+                "actors": [
+                    {"id": 5, "name": "TestPlayer", "type": "Player"},
+                    {"id": 6, "name": "OtherPlayer", "type": "Player"},
+                ],
+                "abilities": [
+                    {"gameID": 190984, "name": "Wrath"},
+                    {"gameID": 194153, "name": "Starfire"},
+                    {"gameID": 78674, "name": "Starsurge"},
+                ],
+            }
+        }
+    }
+}
+
+_CAST_EVENTS_RESPONSE = {
+    "reportData": {
+        "report": {
+            "events": {
+                "data": [
+                    {"type": "cast", "abilityGameID": 190984, "timestamp": 102000},
+                    {"type": "cast", "abilityGameID": 194153, "timestamp": 105000},
+                    {"type": "cast", "abilityGameID": 78674, "timestamp": 108000},
+                    {"type": "cast", "abilityGameID": 190984, "timestamp": 112000},
+                ],
+                "nextPageTimestamp": None,
+            }
+        }
+    }
+}
+
+
+def _make_client(
+    fight=_FIGHT_RESPONSE,
+    master=_MASTER_DATA_RESPONSE,
+    casts=_CAST_EVENTS_RESPONSE,
+) -> MockWCLClient:
+    """构造配置好三个查询响应的 MockWCLClient"""
+    client = MockWCLClient()
+    client.set_response("fights", fight)
+    client.set_response("masterData", master)
+    client.set_response("dataType: Casts", casts)
+    return client
+
+
+class TestGetCastSequenceIntegration:
+    """get_cast_sequence 完整管线集成测试。"""
+
+    # ----------------------------------------------------------
+    # 1. 基本管线验证
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_basic_cast_sequence(self):
+        """完整管线: 3个查询 -> CastSequenceResponse 字段正确"""
+        client = _make_client()
+        resp = await get_cast_sequence(
+            client, "ABC123", fight_id=1,
+            player="TestPlayer", spec="balance-druid",
+        )
+
+        assert resp.report_code == "ABC123"
+        assert resp.fight_id == 1
+        assert resp.player_name == "TestPlayer"
+        assert resp.spec == "balance-druid"
+        assert resp.total_casts == 4
+        # fight_duration = (130000 - 100000) / 1000 = 30.0
+        assert resp.fight_duration == 30.0
+        assert len(resp.casts) == 4
+        # 第一个施法: (102000 - 100000) / 1000 = 2.0 秒
+        assert resp.casts[0].spell_name == "Wrath"
+        assert resp.casts[0].timestamp_sec == 2.0
+
+    # ----------------------------------------------------------
+    # 2. URL 解析
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_url_parsing(self):
+        """传入完整 WCL URL，report_code 应被正确提取"""
+        client = _make_client()
+        resp = await get_cast_sequence(
+            client,
+            "https://www.warcraftlogs.com/reports/XYZ789abc#fight=1",
+            fight_id=1,
+            player="TestPlayer",
+            spec="balance-druid",
+        )
+        assert resp.report_code == "XYZ789abc"
+
+    # ----------------------------------------------------------
+    # 3. 时间范围过滤
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_time_range_filtering(self):
+        """设置 time_start/time_end，仅返回范围内事件"""
+        # 事件时间戳（相对）: 2s, 5s, 8s, 12s
+        # time_start=3, time_end=9 -> query_start=103000, query_end=109000
+        # 模拟 WCL 只返回该范围内的事件
+        filtered_events = {
+            "reportData": {
+                "report": {
+                    "events": {
+                        "data": [
+                            {"type": "cast", "abilityGameID": 194153, "timestamp": 105000},
+                            {"type": "cast", "abilityGameID": 78674, "timestamp": 108000},
+                        ],
+                        "nextPageTimestamp": None,
+                    }
+                }
+            }
+        }
+        client = _make_client(casts=filtered_events)
+        resp = await get_cast_sequence(
+            client, "ABC123", fight_id=1,
+            player="TestPlayer", spec="balance-druid",
+            time_start=3.0, time_end=9.0,
+        )
+
+        assert resp.total_casts == 2
+        assert resp.time_start == 3.0
+        assert resp.time_end == 9.0
+        assert resp.casts[0].spell_name == "Starfire"
+        assert resp.casts[1].spell_name == "Starsurge"
+
+    # ----------------------------------------------------------
+    # 4. 资源提取
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_resource_extraction(self):
+        """classResources 中的资源值应映射到 CastEvent"""
+        events_with_resources = {
+            "reportData": {
+                "report": {
+                    "events": {
+                        "data": [
+                            {
+                                "type": "cast",
+                                "abilityGameID": 78674,
+                                "timestamp": 103000,
+                                "classResources": [
+                                    {"amount": 40, "max": 100, "type": 8}
+                                ],
+                            },
+                            {
+                                "type": "cast",
+                                "abilityGameID": 190984,
+                                "timestamp": 106000,
+                            },
+                        ],
+                        "nextPageTimestamp": None,
+                    }
+                }
+            }
+        }
+        client = _make_client(casts=events_with_resources)
+        resp = await get_cast_sequence(
+            client, "ABC123", fight_id=1,
+            player="TestPlayer", spec="balance-druid",
+        )
+
+        # 第一个事件有资源信息
+        assert resp.casts[0].resource_amount == 40.0
+        assert resp.casts[0].resource_max == 100.0
+        # 第二个事件无资源信息
+        assert resp.casts[1].resource_amount is None
+        assert resp.casts[1].resource_max is None
+
+    # ----------------------------------------------------------
+    # 5. 玩家未找到 -> ValueError
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_player_not_found(self):
+        """玩家名不匹配任何 actor -> 抛出 ValueError"""
+        client = _make_client()
+        with pytest.raises(ValueError, match="未找到玩家"):
+            await get_cast_sequence(
+                client, "ABC123", fight_id=1,
+                player="NonExistentPlayer", spec="balance-druid",
+            )
+
+    # ----------------------------------------------------------
+    # 6. 战斗未找到 -> ValueError
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_fight_not_found(self):
+        """空 fights 响应 -> 抛出 ValueError"""
+        empty_fights = {
+            "reportData": {
+                "report": {
+                    "fights": []
+                }
+            }
+        }
+        client = _make_client(fight=empty_fights)
+        with pytest.raises(ValueError, match="未找到战斗"):
+            await get_cast_sequence(
+                client, "ABC123", fight_id=99,
+                player="TestPlayer", spec="balance-druid",
+            )
+
+    # ----------------------------------------------------------
+    # 7. 事件按时间排序
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_casts_sorted_by_time(self):
+        """乱序到达的事件，输出应按时间排序"""
+        unordered_events = {
+            "reportData": {
+                "report": {
+                    "events": {
+                        "data": [
+                            {"type": "cast", "abilityGameID": 78674, "timestamp": 115000},
+                            {"type": "cast", "abilityGameID": 190984, "timestamp": 102000},
+                            {"type": "cast", "abilityGameID": 194153, "timestamp": 108000},
+                        ],
+                        "nextPageTimestamp": None,
+                    }
+                }
+            }
+        }
+        client = _make_client(casts=unordered_events)
+        resp = await get_cast_sequence(
+            client, "ABC123", fight_id=1,
+            player="TestPlayer", spec="balance-druid",
+        )
+
+        timestamps = [c.timestamp_sec for c in resp.casts]
+        assert timestamps == sorted(timestamps)
+        assert resp.casts[0].spell_name == "Wrath"       # 102000 -> 2.0s
+        assert resp.casts[1].spell_name == "Starfire"     # 108000 -> 8.0s
+        assert resp.casts[2].spell_name == "Starsurge"    # 115000 -> 15.0s
+
+    # ----------------------------------------------------------
+    # 8. 过滤非 cast 类型事件
+    # ----------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_filters_non_cast_events(self):
+        """begincast 等非 cast 类型事件应被排除"""
+        mixed_events = {
+            "reportData": {
+                "report": {
+                    "events": {
+                        "data": [
+                            {"type": "begincast", "abilityGameID": 190984, "timestamp": 101000},
+                            {"type": "cast", "abilityGameID": 190984, "timestamp": 102500},
+                            {"type": "begincast", "abilityGameID": 194153, "timestamp": 104000},
+                            {"type": "cast", "abilityGameID": 194153, "timestamp": 105500},
+                            {"type": "begincast", "abilityGameID": 78674, "timestamp": 107000},
+                        ],
+                        "nextPageTimestamp": None,
+                    }
+                }
+            }
+        }
+        client = _make_client(casts=mixed_events)
+        resp = await get_cast_sequence(
+            client, "ABC123", fight_id=1,
+            player="TestPlayer", spec="balance-druid",
+        )
+
+        # 只有 2 个 cast 事件，3 个 begincast 被过滤
+        assert resp.total_casts == 2
+        assert resp.casts[0].spell_name == "Wrath"
+        assert resp.casts[1].spell_name == "Starfire"

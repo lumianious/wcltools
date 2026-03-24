@@ -468,3 +468,246 @@ class TestBuffTimelineIntegration:
         data = resp.model_dump()
         assert data["buffs"] == []
         assert data["fight_duration"] == 0.0
+
+
+# ============================================================
+# 集成测试 — get_buff_timeline 完整管道（mock WCL 数据）
+# ============================================================
+
+from tests.conftest import MockWCLClient
+from src.tools.buff_timeline import get_buff_timeline
+
+
+# ---- 共享 mock 数据 ----
+
+_FIGHT_INFO = {
+    "reportData": {
+        "report": {
+            "fights": [{
+                "startTime": 100000, "endTime": 130000,
+                "encounterID": 3001, "name": "Test Boss", "kill": True,
+            }]
+        }
+    }
+}
+
+_MASTER_DATA = {
+    "reportData": {
+        "report": {
+            "masterData": {
+                "actors": [
+                    {"id": 5, "name": "TestPlayer", "type": "Player", "subType": "Druid"},
+                ],
+                "abilities": [
+                    {"gameID": 12345, "name": "Eclipse (Solar)"},
+                    {"gameID": 67890, "name": "Moonfire"},
+                    {"gameID": 99999, "name": "Sunfire"},
+                ],
+            }
+        }
+    }
+}
+
+_BUFF_EVENTS_TWO_BUFFS = {
+    "reportData": {
+        "report": {
+            "events": {
+                "data": [
+                    {"type": "applybuff", "abilityGameID": 12345, "timestamp": 100500},
+                    {"type": "removebuff", "abilityGameID": 12345, "timestamp": 115000},
+                    {"type": "applybuff", "abilityGameID": 67890, "timestamp": 101000},
+                    {"type": "removebuff", "abilityGameID": 67890, "timestamp": 125000},
+                ],
+                "nextPageTimestamp": None,
+            }
+        }
+    }
+}
+
+_DEBUFF_EVENTS_EMPTY = {
+    "reportData": {
+        "report": {
+            "events": {
+                "data": [],
+                "nextPageTimestamp": None,
+            }
+        }
+    }
+}
+
+
+def _make_client_with_defaults(
+    buff_events: dict | None = None,
+    debuff_events: dict | None = None,
+    fight_info: dict | None = None,
+    master_data: dict | None = None,
+) -> MockWCLClient:
+    """构建预配置 mock client，可覆盖任意查询响应。"""
+    client = MockWCLClient()
+    client.set_response("fights(fightIDs:", fight_info or _FIGHT_INFO)
+    client.set_response("masterData", master_data or _MASTER_DATA)
+    client.set_response("dataType: Buffs", buff_events or _BUFF_EVENTS_TWO_BUFFS)
+    client.set_response("dataType: Debuffs", debuff_events or _DEBUFF_EVENTS_EMPTY)
+    return client
+
+
+class TestGetBuffTimelineIntegration:
+    """get_buff_timeline 完整管道集成测试（mock WCL 数据）。"""
+
+    # ---- 1. 基础管道: 多个 Buff 事件 ----
+    @pytest.mark.asyncio
+    async def test_basic_buff_timeline(self):
+        """完整管道: 2 个 Buff，apply/remove 事件，验证响应字段"""
+        client = _make_client_with_defaults()
+        resp = await get_buff_timeline(
+            client, "ABC123", fight_id=1, player="TestPlayer",
+        )
+        assert resp.report_code == "ABC123"
+        assert resp.fight_id == 1
+        assert resp.player_name == "TestPlayer"
+        # 战斗时长 = (130000 - 100000) / 1000 = 30s
+        assert resp.fight_duration == 30.0
+        # 应包含 2 个 Buff 摘要
+        assert len(resp.buffs) >= 2
+        buff_ids_in_resp = {b.buff_id for b in resp.buffs}
+        assert 12345 in buff_ids_in_resp
+        assert 67890 in buff_ids_in_resp
+
+    # ---- 2. 覆盖率计算: 半程 Buff -> ~50% ----
+    @pytest.mark.asyncio
+    async def test_uptime_calculation(self):
+        """Buff 在战斗前半段存在 -> 覆盖率约 50%"""
+        # 30s 战斗，Buff 存在 100000-115000 = 15s = 50%
+        buff_events = {
+            "reportData": {
+                "report": {
+                    "events": {
+                        "data": [
+                            {"type": "applybuff", "abilityGameID": 12345,
+                             "timestamp": 100000},
+                            {"type": "removebuff", "abilityGameID": 12345,
+                             "timestamp": 115000},
+                        ],
+                        "nextPageTimestamp": None,
+                    }
+                }
+            }
+        }
+        client = _make_client_with_defaults(buff_events=buff_events)
+        resp = await get_buff_timeline(
+            client, "ABC123", fight_id=1, player="TestPlayer",
+        )
+        eclipse_buff = next(b for b in resp.buffs if b.buff_id == 12345)
+        assert abs(eclipse_buff.uptime_pct - 50.0) < 1.0
+
+    # ---- 3. buff_ids 过滤: 仅指定 Buff 保留事件详情 ----
+    @pytest.mark.asyncio
+    async def test_buff_ids_filtering(self):
+        """指定 buff_ids 后，非目标 Buff 事件列表为空"""
+        client = _make_client_with_defaults()
+        resp = await get_buff_timeline(
+            client, "ABC123", fight_id=1, player="TestPlayer",
+            buff_ids=[12345],
+        )
+        for b in resp.buffs:
+            if b.buff_id == 12345:
+                # 目标 Buff 保留事件
+                assert len(b.events) > 0
+            else:
+                # 非目标 Buff 事件被清空
+                assert len(b.events) == 0
+
+    # ---- 4. Debuff 事件: applydebuff/removedebuff 归入结果 ----
+    @pytest.mark.asyncio
+    async def test_debuff_events_included(self):
+        """Debuff 事件（applydebuff/removedebuff）出现在结果中"""
+        debuff_events = {
+            "reportData": {
+                "report": {
+                    "events": {
+                        "data": [
+                            {"type": "applydebuff", "abilityGameID": 99999,
+                             "timestamp": 102000},
+                            {"type": "removedebuff", "abilityGameID": 99999,
+                             "timestamp": 120000},
+                        ],
+                        "nextPageTimestamp": None,
+                    }
+                }
+            }
+        }
+        client = _make_client_with_defaults(debuff_events=debuff_events)
+        resp = await get_buff_timeline(
+            client, "ABC123", fight_id=1, player="TestPlayer",
+        )
+        sunfire_buff = next(
+            (b for b in resp.buffs if b.buff_id == 99999), None,
+        )
+        assert sunfire_buff is not None
+        assert sunfire_buff.buff_name == "Sunfire"
+        assert sunfire_buff.apply_count >= 1
+        # 确认事件类型保留原始 debuff 名称
+        event_types = {e.event_type for e in sunfire_buff.events}
+        assert "applydebuff" in event_types
+        assert "removedebuff" in event_types
+
+    # ---- 5. 玩家未找到: 抛出 ValueError ----
+    @pytest.mark.asyncio
+    async def test_player_not_found(self):
+        """玩家名不匹配任何 actor -> ValueError"""
+        client = _make_client_with_defaults()
+        with pytest.raises(ValueError, match="未找到玩家"):
+            await get_buff_timeline(
+                client, "ABC123", fight_id=1, player="NonExistentPlayer",
+            )
+
+    # ---- 6. 战斗未找到: 空 fights 列表 -> ValueError ----
+    @pytest.mark.asyncio
+    async def test_fight_not_found(self):
+        """空 fights 列表 -> ValueError"""
+        empty_fights = {
+            "reportData": {
+                "report": {
+                    "fights": []
+                }
+            }
+        }
+        client = _make_client_with_defaults(fight_info=empty_fights)
+        with pytest.raises(ValueError, match="未找到战斗"):
+            await get_buff_timeline(
+                client, "ABC123", fight_id=99, player="TestPlayer",
+            )
+
+    # ---- 7. 层数追踪: applybuffstack/removebuffstack -> avg_stacks > 0 ----
+    @pytest.mark.asyncio
+    async def test_stack_tracking(self):
+        """包含 applybuffstack/removebuffstack 事件 -> avg_stacks > 0"""
+        buff_events = {
+            "reportData": {
+                "report": {
+                    "events": {
+                        "data": [
+                            {"type": "applybuff", "abilityGameID": 12345,
+                             "timestamp": 100000, "stack": 1},
+                            {"type": "applybuffstack", "abilityGameID": 12345,
+                             "timestamp": 105000, "stack": 2},
+                            {"type": "applybuffstack", "abilityGameID": 12345,
+                             "timestamp": 110000, "stack": 3},
+                            {"type": "removebuffstack", "abilityGameID": 12345,
+                             "timestamp": 120000, "stack": 2},
+                            {"type": "removebuff", "abilityGameID": 12345,
+                             "timestamp": 125000, "stack": 0},
+                        ],
+                        "nextPageTimestamp": None,
+                    }
+                }
+            }
+        }
+        client = _make_client_with_defaults(buff_events=buff_events)
+        resp = await get_buff_timeline(
+            client, "ABC123", fight_id=1, player="TestPlayer",
+        )
+        eclipse_buff = next(b for b in resp.buffs if b.buff_id == 12345)
+        # stack_samples: [1, 2, 3, 2] -> avg > 0
+        assert eclipse_buff.avg_stacks > 0
+        assert eclipse_buff.apply_count >= 1

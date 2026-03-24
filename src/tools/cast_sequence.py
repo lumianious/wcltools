@@ -23,7 +23,11 @@ from typing import Any
 # 本地模块
 # ============================================================
 from src.models import CastEvent, CastSequenceResponse
-from src.tools.analyze import _extract_report_code, _find_actor_id_ci, _query_fight_info_full
+from src.tools._wcl_helpers import (
+    extract_report_code,
+    find_actor_id_ci,
+    query_fight_info_full,
+)
 from src.tools.rotation import _query_cast_events, _query_master_data
 from src.wcl_client import WCLClient
 
@@ -59,7 +63,7 @@ async def get_cast_sequence(
     Returns:
         CastSequenceResponse 施法序列
     """
-    report_code = _extract_report_code(report)
+    report_code = extract_report_code(report)
 
     logger.info(
         "get_cast_sequence: %s in %s fight=%d [%.1f-%.1f]",
@@ -67,7 +71,7 @@ async def get_cast_sequence(
     )
 
     # ---- Step 1: 战斗信息 ----
-    fight_info = await _query_fight_info_full(client, report_code, fight_id)
+    fight_info = await query_fight_info_full(client, report_code, fight_id)
     if not fight_info:
         raise ValueError(f"未找到战斗 fight_id={fight_id} in report {report_code}")
 
@@ -80,7 +84,7 @@ async def get_cast_sequence(
 
     # ---- Step 2: masterData ----
     actors, ability_map = await _query_master_data(client, report_code)
-    source_id = _find_actor_id_ci(actors, player)
+    source_id = find_actor_id_ci(actors, player)
     if source_id is None:
         raise ValueError(f"未找到玩家 '{player}' in report {report_code}")
 

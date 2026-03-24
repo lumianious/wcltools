@@ -67,6 +67,77 @@ async def _query_fight_info(
     return fights[0] if fights else None
 
 
+async def _query_enemy_casts_by_ability(
+    client: WCLClient,
+    report_code: str,
+    start_time: int,
+    end_time: int,
+    ability_ids: list[int],
+) -> list[dict]:
+    """按 ability 分别查询敌方施法事件，减少单次数据量。"""
+    all_events: list[dict] = []
+    for ability_id in ability_ids:
+        next_ts: int | None = start_time
+        while next_ts is not None:
+            gql = f"""
+                reportData {{
+                    report(code: "{report_code}") {{
+                        events(
+                            startTime: {next_ts}
+                            endTime: {end_time}
+                            hostilityType: Enemies
+                            dataType: Casts
+                            abilityID: {ability_id}
+                            limit: 10000
+                        ) {{
+                            data
+                            nextPageTimestamp
+                        }}
+                    }}
+                }}
+            """
+            data = await client.query(gql)
+            report = data.get("reportData", {}).get("report", {})
+            events_block = report.get("events", {})
+            all_events.extend(events_block.get("data", []))
+            next_ts = events_block.get("nextPageTimestamp")
+    return all_events
+
+
+async def _query_enemy_casts_all(
+    client: WCLClient,
+    report_code: str,
+    start_time: int,
+    end_time: int,
+) -> list[dict]:
+    """查询所有敌方施法事件（不按技能过滤）。"""
+    all_events: list[dict] = []
+    next_ts: int | None = start_time
+    while next_ts is not None:
+        gql = f"""
+            reportData {{
+                report(code: "{report_code}") {{
+                    events(
+                        startTime: {next_ts}
+                        endTime: {end_time}
+                        hostilityType: Enemies
+                        dataType: Casts
+                        limit: 10000
+                    ) {{
+                        data
+                        nextPageTimestamp
+                    }}
+                }}
+            }}
+        """
+        data = await client.query(gql)
+        report = data.get("reportData", {}).get("report", {})
+        events_block = report.get("events", {})
+        all_events.extend(events_block.get("data", []))
+        next_ts = events_block.get("nextPageTimestamp")
+    return all_events
+
+
 async def _query_enemy_cast_events(
     client: WCLClient,
     report_code: str,
@@ -79,69 +150,79 @@ async def _query_enemy_cast_events(
     使用 hostilityType: Enemies 获取 boss 施法。
     可选按 abilityID 过滤特定技能。
     """
-    all_events: list[dict] = []
-
     if ability_ids:
-        # 按 ability 分别查询，减少数据量
-        for ability_id in ability_ids:
-            next_ts: int | None = start_time
-            while next_ts is not None:
-                gql = f"""
-                    reportData {{
-                        report(code: "{report_code}") {{
-                            events(
-                                startTime: {next_ts}
-                                endTime: {end_time}
-                                hostilityType: Enemies
-                                dataType: Casts
-                                abilityID: {ability_id}
-                                limit: 10000
-                            ) {{
-                                data
-                                nextPageTimestamp
-                            }}
-                        }}
-                    }}
-                """
-                data = await client.query(gql)
-                report = data.get("reportData", {}).get("report", {})
-                events_block = report.get("events", {})
-                page_data = events_block.get("data", [])
-                all_events.extend(page_data)
-                next_ts = events_block.get("nextPageTimestamp")
-    else:
-        # 查询所有敌方施法
-        next_ts_all: int | None = start_time
-        while next_ts_all is not None:
-            gql = f"""
-                reportData {{
-                    report(code: "{report_code}") {{
-                        events(
-                            startTime: {next_ts_all}
-                            endTime: {end_time}
-                            hostilityType: Enemies
-                            dataType: Casts
-                            limit: 10000
-                        ) {{
-                            data
-                            nextPageTimestamp
-                        }}
-                    }}
-                }}
-            """
-            data = await client.query(gql)
-            report = data.get("reportData", {}).get("report", {})
-            events_block = report.get("events", {})
-            page_data = events_block.get("data", [])
-            all_events.extend(page_data)
-            next_ts_all = events_block.get("nextPageTimestamp")
-
-    return all_events
+        return await _query_enemy_casts_by_ability(
+            client, report_code, start_time, end_time, ability_ids,
+        )
+    return await _query_enemy_casts_all(
+        client, report_code, start_time, end_time,
+    )
 
 
 # ============================================================
 # 公开接口
 # ============================================================
+
+
+def _resolve_ability_ids(
+    spell_ids: Optional[list[int]],
+    encounter_id: int,
+) -> Optional[list[int]]:
+    """确定要查询的技能 ID 列表。
+
+    优先使用调用方指定的 spell_ids，否则从 bosses.json 中获取。
+    """
+    if spell_ids:
+        return spell_ids
+    if encounter_id:
+        boss = get_boss(encounter_id)
+        if boss:
+            return [
+                s["spell_id"] for s in boss.get("spells", [])
+                if s.get("spell_id")
+            ]
+    return None
+
+
+def _build_spell_name_map(encounter_id: int) -> dict[int, str]:
+    """从 bosses.json 构建 spell_id -> name 映射。"""
+    spell_name_map: dict[int, str] = {}
+    if encounter_id:
+        boss = get_boss(encounter_id)
+        if boss:
+            for s in boss.get("spells", []):
+                spell_name_map[s["spell_id"]] = s["name"]
+    return spell_name_map
+
+
+def _parse_boss_events(
+    raw_events: list[dict],
+    start_time: int,
+    spell_name_map: dict[int, str],
+) -> tuple[list[BossCastEvent], dict[str, int]]:
+    """将原始 WCL 事件解析为 BossCastEvent 列表和技能计数。"""
+    events: list[BossCastEvent] = []
+    counts: dict[str, int] = defaultdict(int)
+
+    for evt in raw_events:
+        if evt.get("type") != "cast":
+            continue
+        sid = evt.get("abilityGameID")
+        if not sid:
+            continue
+        ts_sec = (evt.get("timestamp", 0) - start_time) / 1000.0
+        name = spell_name_map.get(
+            sid, evt.get("ability", {}).get("name", f"Spell {sid}"),
+        )
+        events.append(BossCastEvent(
+            spell_id=sid,
+            spell_name=name,
+            timestamp_sec=round(ts_sec, 1),
+        ))
+        counts[name] += 1
+
+    events.sort(key=lambda e: e.timestamp_sec)
+    return events, counts
 
 
 async def get_boss_cast_timeline(
@@ -150,17 +231,10 @@ async def get_boss_cast_timeline(
     fight_id: int,
     spell_ids: Optional[list[int]] = None,
 ) -> BossCastTimelineResponse:
-    """
-    查询指定战斗中的 boss 技能施法时间线。
+    """查询指定战斗中的 boss 技能施法时间线。
 
     如果提供 spell_ids，只查询指定技能；否则使用 bosses.json
     中该 boss 的所有已知技能。如果 boss 未收录，查询全部敌方施法。
-
-    Args:
-        client: WCL API 客户端
-        report: Report code 或完整 WCL URL
-        fight_id: 战斗 ID
-        spell_ids: 可选，要查询的特定技能 ID 列表
     """
     report_code = _extract_report_code(report)
 
@@ -173,60 +247,25 @@ async def get_boss_cast_timeline(
     end_time = fight_info.get("endTime", 0)
     encounter_id = fight_info.get("encounterID", 0)
     encounter_name = fight_info.get("name", "")
-    fight_duration = (end_time - start_time) / 1000.0
 
     # Step 2: 确定要查询的技能
-    ability_ids = spell_ids
-    if not ability_ids and encounter_id:
-        boss = get_boss(encounter_id)
-        if boss:
-            ability_ids = [
-                s["spell_id"] for s in boss.get("spells", [])
-                if s.get("spell_id")
-            ]
+    ability_ids = _resolve_ability_ids(spell_ids, encounter_id)
 
     # Step 3: 查询敌方事件
     raw_events = await _query_enemy_cast_events(
         client, report_code, start_time, end_time, ability_ids,
     )
 
-    # Step 4: 构建技能名映射（优先用 bosses.json，退化到 WCL 数据）
-    spell_name_map: dict[int, str] = {}
-    if encounter_id:
-        boss = get_boss(encounter_id)
-        if boss:
-            for s in boss.get("spells", []):
-                spell_name_map[s["spell_id"]] = s["name"]
-
-    # Step 5: 解析事件
-    events: list[BossCastEvent] = []
-    counts: dict[str, int] = defaultdict(int)
-
-    for evt in raw_events:
-        if evt.get("type") != "cast":
-            continue
-        sid = evt.get("abilityGameID")
-        if not sid:
-            continue
-        ts_sec = (evt.get("timestamp", 0) - start_time) / 1000.0
-        name = spell_name_map.get(sid, evt.get("ability", {}).get("name", f"Spell {sid}"))
-
-        events.append(BossCastEvent(
-            spell_id=sid,
-            spell_name=name,
-            timestamp_sec=round(ts_sec, 1),
-        ))
-        counts[name] += 1
-
-    # 按时间排序
-    events.sort(key=lambda e: e.timestamp_sec)
+    # Step 4: 构建技能名映射 & Step 5: 解析事件
+    spell_name_map = _build_spell_name_map(encounter_id)
+    events, counts = _parse_boss_events(raw_events, start_time, spell_name_map)
 
     return BossCastTimelineResponse(
         report_code=report_code,
         fight_id=fight_id,
         encounter_id=encounter_id,
         encounter_name=encounter_name,
-        fight_duration=round(fight_duration, 1),
+        fight_duration=round((end_time - start_time) / 1000.0, 1),
         events=events,
         spell_summary=dict(counts),
     )
