@@ -70,11 +70,12 @@ Plans:
   2. Agent can run raid-style cast-by-cast analysis on each boss within a M+ dungeon and compare against top-player benchmarks
   3. Agent can analyze player deaths with damage-taken breakdown and defensive availability check
   4. Agent can compare player's interrupt usage against benchmark (count and critical kicks missed)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 10-01: TBD
-- [ ] 10-02: TBD
+- [ ] 10-01-PLAN.md — Pydantic models, trash damage comparison (DMG-02), interrupt comparison (INT-02)
+- [ ] 10-02-PLAN.md — Boss cast-by-cast comparison (BOSS-01, BOSS-02), death analysis with defensive check (SURV-02)
+- [ ] 10-03-PLAN.md — compare_mplus_run orchestrator, MCP tool registration, documentation
 
 ### Phase 11: M+ Coaching Tool
 **Goal**: Agent can produce actionable per-segment coaching for an entire M+ dungeon run
@@ -99,5 +100,5 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11
 | 1-7 | v1.0 | 7/7 | Complete | shipped |
 | 8. M+ API Foundation | v2.0 | 2/2 | Complete | 2026-03-28 |
 | 9. M+ Benchmark Aggregation | v2.0 | 0/3 | Not started | - |
-| 10. M+ Comparison Engine | v2.0 | 0/? | Not started | - |
+| 10. M+ Comparison Engine | v2.0 | 0/3 | Not started | - |
 | 11. M+ Coaching Tool | v2.0 | 0/? | Not started | - |
