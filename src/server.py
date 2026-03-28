@@ -2,7 +2,7 @@
 WoW 团本 / 大秘境教练 MCP 服务器 — 入口模块。
 
 传输协议: stdio（stdout 专用于 JSON-RPC，日志全部走 stderr）
-工具注册: get_encounters, get_top_builds, get_spec_info, get_cooldown_timelines, get_rotation_profile, get_defensive_patterns, get_example_logs, analyze_player_log, analyze_dungeon_run, get_mplus_benchmarks, get_cast_sequence, get_buff_timeline, get_resource_timeline, get_boss_cast_timeline, get_coaching_context
+工具注册: get_encounters, get_top_builds, get_spec_info, get_cooldown_timelines, get_rotation_profile, get_defensive_patterns, get_example_logs, analyze_player_log, analyze_dungeon_run, get_mplus_benchmarks, compare_mplus_run, get_cast_sequence, get_buff_timeline, get_resource_timeline, get_boss_cast_timeline, get_coaching_context
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
 """
@@ -40,6 +40,7 @@ from src.tools.resource_timeline import get_resource_timeline as _get_resource_t
 from src.tools.boss_timeline import get_boss_cast_timeline as _get_boss_cast_timeline
 from src.tools.dungeon_analysis import analyze_dungeon_run as _analyze_dungeon_run
 from src.tools.mplus_benchmarks import get_mplus_benchmarks as _get_mplus_benchmarks
+from src.tools.mplus_comparison import compare_mplus_run as _compare_mplus_run
 from src.wcl_client import WCLClient
 
 # ============================================================
@@ -445,6 +446,46 @@ async def get_mplus_benchmarks(
     """
     client = _get_wcl_client()
     result = await _get_mplus_benchmarks(client, spec, encounter_id, key_level)
+    return result.model_dump()
+
+
+# ============================================================
+# 工具: compare_mplus_run
+# ============================================================
+
+
+@mcp.tool()
+async def compare_mplus_run(
+    report_code: str,
+    player_name: str,
+    encounter_id: int,
+    spec: str,
+    key_level: int,
+    fight: str = "last",
+) -> dict:
+    """
+    Compare a player's M+ dungeon run against benchmarks from top players.
+
+    Returns per-segment damage gaps, boss cast-level analysis, death breakdowns
+    with defensive availability, and interrupt comparison. Combines player data
+    extraction with benchmark lookup in a single call.
+
+    Use get_encounters (content_type="mythic_plus") to discover encounter IDs.
+    Use get_mplus_benchmarks to preview benchmark data before comparison.
+    Cost: ~30-50 WCL points (player queries + benchmark if not cached).
+
+    Args:
+        report_code: WCL report code containing the player's dungeon run
+        player_name: Character name (case-insensitive)
+        encounter_id: Dungeon encounter ID from get_encounters
+        spec: Class spec slug, e.g. "balance-druid", "frost-death-knight"
+        key_level: Mythic+ keystone level for benchmark comparison
+        fight: Which run to analyze — "last" (default), index ("1","2"), or name
+    """
+    client = _get_wcl_client()
+    result = await _compare_mplus_run(
+        client, report_code, player_name, encounter_id, spec, key_level, fight
+    )
     return result.model_dump()
 
 

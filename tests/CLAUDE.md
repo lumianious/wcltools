@@ -32,7 +32,7 @@
 | `test_dungeon_analysis.py` | `analyze_dungeon_run` 工具 | Phase 8 |
 | `test_mplus_foundation.py` | M+ 基础设施（DIFFICULTY_MAP、模型、rankings 查询） | Phase 8 |
 | `test_mplus_benchmarks.py` | M+ Benchmark Aggregation（模型 + 管道 + 聚合 + 缓存） | Phase 9 |
-| `test_mplus_comparison.py` | M+ Comparison Engine（伤害差距 + 打断对比） | Phase 10 |
+| `test_mplus_comparison.py` | M+ Comparison Engine（伤害差距 + 打断对比 + 编排器） | Phase 10 |
 
 ## 测试约定
 

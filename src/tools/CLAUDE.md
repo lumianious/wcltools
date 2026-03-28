@@ -27,7 +27,7 @@
 | `timelines.py` | `get_cooldown_timelines` 工具 — CD 技能时间线 | `get_cooldown_timelines` |
 | `mplus_rankings.py` | M+ 排行榜查询 — bracket 过滤、稀疏回退、缓存 | `query_mplus_rankings` |
 | `mplus_benchmarks.py` | M+ 基准聚合 — 从顶尖玩家报告提取分段基准数据 | `get_mplus_benchmarks` |
-| `mplus_comparison.py` | M+ 对比引擎 — 玩家表现与基准数据差距分析 | `_compute_gap`, `_compare_trash_damage`, `_compare_interrupts`, `_compare_boss_casts`, `_compare_boss_cds`, `_check_defensive_availability`, `_build_death_breakdown`, `_query_damage_taken_events` |
+| `mplus_comparison.py` | M+ 对比引擎 — 玩家 vs 基准全段对比 | `compare_mplus_run` |
 
 ## 模块依赖
 
@@ -42,6 +42,7 @@ boss_timeline.py → data (bosses.json)
 timelines.py → cache, data, builds
 mplus_rankings.py → cache, builds (SPEC_MAPPING), models (MplusRankingEntry, MplusBenchmarkMeta)
 mplus_benchmarks.py → _wcl_helpers, dungeon_analysis, timelines, mplus_rankings, models, cache
+mplus_comparison.py → _wcl_helpers, mplus_benchmarks, dungeon_analysis, timelines, analyze, models
 ```
 
 ## 约定
