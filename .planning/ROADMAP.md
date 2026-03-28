@@ -38,11 +38,11 @@
   2. Agent can filter M+ rankings by keystone level bracket (e.g., +10, +12) without cross-bracket contamination
   3. M+ benchmark data is cached per dungeon+spec+key level combination with appropriate TTL
   4. Dungeon run queries include keystoneLevel and keystoneBonus fields for run quality classification
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md — Verify WCL M+ API parameters live (difficulty=10, bracket, encounter IDs, keystone fields)
+- [ ] 08-02-PLAN.md — Add mythic_plus difficulty, Pydantic models, keystone fields, M+ rankings query with cache
 
 ### Phase 9: M+ Benchmark Aggregation
 **Goal**: Agent can retrieve comprehensive benchmark data from top M+ players for any dungeon segment
@@ -96,7 +96,7 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-7 | v1.0 | 7/7 | Complete | shipped |
-| 8. M+ API Foundation | v2.0 | 0/? | Not started | - |
+| 8. M+ API Foundation | v2.0 | 0/2 | Planning complete | - |
 | 9. M+ Benchmark Aggregation | v2.0 | 0/? | Not started | - |
 | 10. M+ Comparison Engine | v2.0 | 0/? | Not started | - |
 | 11. M+ Coaching Tool | v2.0 | 0/? | Not started | - |
