@@ -31,6 +31,7 @@
 | `test_phase7.py` | Phase 7 综合集成测试 | Phase 7 |
 | `test_dungeon_analysis.py` | `analyze_dungeon_run` 工具 | Phase 8 |
 | `test_mplus_foundation.py` | M+ 基础设施（DIFFICULTY_MAP、模型、rankings 查询） | Phase 8 |
+| `test_mplus_benchmarks.py` | M+ Benchmark Aggregation（模型 + 管道测试脚手架） | Phase 9 |
 
 ## 测试约定
 

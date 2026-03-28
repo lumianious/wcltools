@@ -615,6 +615,213 @@ MPLUS_RANKINGS_RESPONSE = {
 }
 
 
+# ============================================================
+# M+ Benchmark Aggregation Fixtures (Phase 9)
+# ============================================================
+
+# ----------------------------------------------------------
+# M+ 副本战斗列表 — 模拟 _query_all_fights 返回的 fights
+# 副本: The Stonevault, 钥石等级 10
+# 结构: 聚合 fight + trash/boss 段落
+# ----------------------------------------------------------
+MPLUS_REPORT_FIGHTS = [
+    # 聚合 fight（encounterID > 0 表示整个副本级别）
+    {
+        "id": 1,
+        "name": "The Stonevault",
+        "startTime": 0,
+        "endTime": 300000,
+        "encounterID": 12345,
+        "kill": True,
+        "gameZone": {"id": 12345, "name": "The Stonevault"},
+        "keystoneLevel": 10,
+        "keystoneBonus": 1,
+        "keystoneAffixes": [10, 152],
+        "keystoneTime": 300000,
+    },
+    # Trash #1 (开场到 Boss 1 之前)
+    {
+        "id": 2,
+        "name": "Trash",
+        "startTime": 0,
+        "endTime": 30000,
+        "encounterID": 0,
+        "kill": True,
+        "gameZone": {"id": 12345, "name": "The Stonevault"},
+        "keystoneLevel": 10,
+        "keystoneBonus": 1,
+    },
+    # Trash #2
+    {
+        "id": 3,
+        "name": "Trash",
+        "startTime": 30000,
+        "endTime": 60000,
+        "encounterID": 0,
+        "kill": True,
+        "gameZone": {"id": 12345, "name": "The Stonevault"},
+        "keystoneLevel": 10,
+        "keystoneBonus": 1,
+    },
+    # Boss 1: Skarmorak
+    {
+        "id": 4,
+        "name": "Skarmorak",
+        "startTime": 60000,
+        "endTime": 120000,
+        "encounterID": 0,
+        "kill": True,
+        "gameZone": {"id": 12345, "name": "The Stonevault"},
+        "keystoneLevel": 10,
+        "keystoneBonus": 1,
+    },
+    # Trash between bosses
+    {
+        "id": 5,
+        "name": "Trash",
+        "startTime": 120000,
+        "endTime": 150000,
+        "encounterID": 0,
+        "kill": True,
+        "gameZone": {"id": 12345, "name": "The Stonevault"},
+        "keystoneLevel": 10,
+        "keystoneBonus": 1,
+    },
+    # Boss 2: Master Machinists
+    {
+        "id": 6,
+        "name": "Master Machinists",
+        "startTime": 150000,
+        "endTime": 210000,
+        "encounterID": 0,
+        "kill": True,
+        "gameZone": {"id": 12345, "name": "The Stonevault"},
+        "keystoneLevel": 10,
+        "keystoneBonus": 1,
+    },
+    # Trash after Boss 2
+    {
+        "id": 7,
+        "name": "Trash",
+        "startTime": 210000,
+        "endTime": 240000,
+        "encounterID": 0,
+        "kill": True,
+        "gameZone": {"id": 12345, "name": "The Stonevault"},
+        "keystoneLevel": 10,
+        "keystoneBonus": 1,
+    },
+    # Boss 3: Void Speaker Eirich
+    {
+        "id": 8,
+        "name": "Void Speaker Eirich",
+        "startTime": 240000,
+        "endTime": 300000,
+        "encounterID": 0,
+        "kill": True,
+        "gameZone": {"id": 12345, "name": "The Stonevault"},
+        "keystoneLevel": 10,
+        "keystoneBonus": 1,
+    },
+]
+
+# ----------------------------------------------------------
+# 段落伤害表响应 — 模拟 DamageDone table 查询
+# ----------------------------------------------------------
+MPLUS_DAMAGE_TABLE_RESPONSE = {
+    "reportData": {
+        "report": {
+            "table": {
+                "data": {
+                    "entries": [
+                        {"name": "Starsurge", "total": 500000, "id": 78674},
+                        {"name": "Starfall", "total": 300000, "id": 191034},
+                        {"name": "Sunfire", "total": 150000, "id": 93402},
+                        {"name": "Moonfire", "total": 100000, "id": 8921},
+                    ]
+                }
+            }
+        }
+    }
+}
+
+# ----------------------------------------------------------
+# 段落施法事件响应 — CD 施放（Celestial Alignment + Barkskin）
+# ----------------------------------------------------------
+MPLUS_CAST_EVENTS_RESPONSE = {
+    "reportData": {
+        "report": {
+            "events": {
+                "data": [
+                    {
+                        "timestamp": 5000,
+                        "type": "cast",
+                        "abilityGameID": 194223,
+                        "sourceID": 10,
+                    },  # Celestial Alignment (3min CD)
+                    {
+                        "timestamp": 15000,
+                        "type": "cast",
+                        "abilityGameID": 22812,
+                        "sourceID": 10,
+                    },  # Barkskin (defensive)
+                ],
+                "nextPageTimestamp": None,
+            }
+        }
+    }
+}
+
+# ----------------------------------------------------------
+# 段落打断事件响应
+# ----------------------------------------------------------
+MPLUS_INTERRUPT_EVENTS_RESPONSE = {
+    "reportData": {
+        "report": {
+            "events": {
+                "data": [
+                    {
+                        "timestamp": 10000,
+                        "type": "interrupt",
+                        "abilityGameID": 106839,
+                        "sourceID": 10,
+                        "extraAbilityGameID": 99999,
+                    },
+                    {
+                        "timestamp": 25000,
+                        "type": "interrupt",
+                        "abilityGameID": 106839,
+                        "sourceID": 10,
+                        "extraAbilityGameID": 88888,
+                    },
+                ],
+                "nextPageTimestamp": None,
+            }
+        }
+    }
+}
+
+# ----------------------------------------------------------
+# masterData 响应 — M+ 报告中的玩家信息
+# ----------------------------------------------------------
+MPLUS_MASTER_DATA_RESPONSE = {
+    "reportData": {
+        "report": {
+            "masterData": {
+                "actors": [
+                    {
+                        "id": 10,
+                        "name": "Topplayer",
+                        "type": "Player",
+                        "subType": "Druid",
+                    },
+                ]
+            }
+        }
+    }
+}
+
+
 def make_graphql_response(data: dict, rate_limit: dict | None = None) -> dict:
     """
     包装为 httpx 返回的原始 GraphQL 响应结构。
