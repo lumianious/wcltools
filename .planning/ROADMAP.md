@@ -23,7 +23,7 @@
 ### v2.0 M+ Coaching Intelligence
 
 - [x] **Phase 8: M+ API Foundation** - Verify WCL M+ API parameters, add difficulty support, models, caching
-- [ ] **Phase 9: M+ Benchmark Aggregation** - Build cached benchmark bundle from top M+ players per dungeon
+- [x] **Phase 9: M+ Benchmark Aggregation** - Build cached benchmark bundle from top M+ players per dungeon
 - [ ] **Phase 10: M+ Comparison Engine** - Per-segment comparison, boss analysis, death analysis, interrupt comparison
 - [ ] **Phase 11: M+ Coaching Tool** - Orchestrate all data into structured coaching output with actionable advice
 
