@@ -238,8 +238,152 @@ class TestBossBenchmarks:
 
     @pytest.mark.asyncio
     async def test_boss_cast_benchmarks(self):
-        """Boss 段落提取 cast-level 基准数据（复用 raid 工具模式）。"""
+        """Boss 段落提取 cast-level 基准数据。"""
+        from unittest.mock import AsyncMock
+
         from src.tools.mplus_benchmarks import _extract_boss_benchmark
 
-        # 将在 Plan 03 完整实现管道集成
-        pytest.skip("Implemented in Plan 03 with full pipeline integration")
+        mock_client = AsyncMock()
+        # 模拟施法事件返回
+        mock_client.query.return_value = {
+            "reportData": {
+                "report": {
+                    "events": {
+                        "data": [
+                            {"abilityGameID": 78674, "ability": {"name": "Starsurge"}},
+                            {"abilityGameID": 78674, "ability": {"name": "Starsurge"}},
+                            {"abilityGameID": 194223, "ability": {"name": "Celestial Alignment"}},
+                        ],
+                        "nextPageTimestamp": None,
+                    }
+                }
+            }
+        }
+        boss_fight = {
+            "name": "Skarmorak",
+            "startTime": 0,
+            "endTime": 60000,
+            "position": 1,
+        }
+        tracked = {
+            194223: {"name": "Celestial Alignment", "cd_seconds": 180, "ability_type": "dps"},
+        }
+        result = await _extract_boss_benchmark(
+            mock_client, "ABC123", 1, boss_fight, tracked
+        )
+        assert result["boss_name"] == "Skarmorak"
+        assert result["duration_sec"] == 60.0
+        assert len(result["cast_stats"]) >= 2
+
+
+# ============================================================
+# Aggregation Tests
+# ============================================================
+
+
+class TestAggregation:
+    """跨玩家中位数聚合。"""
+
+    def test_aggregate_two_reports(self):
+        """两份报告的段落数据取中位数聚合。"""
+        from src.tools.mplus_benchmarks import _aggregate_segment_data
+
+        report_a = {"segments": [
+            {"position": 0, "segment_type": "trash", "name": "Trash #1",
+             "duration_sec": 30.0,
+             "damage_breakdown": [{"spell_name": "X", "spell_id": 1, "total_damage": 100, "damage_pct": 50.0}],
+             "cd_casts": [], "defensive_cds": [], "interrupt_count": 2}
+        ]}
+        report_b = {"segments": [
+            {"position": 0, "segment_type": "trash", "name": "Trash #1",
+             "duration_sec": 40.0,
+             "damage_breakdown": [{"spell_name": "X", "spell_id": 1, "total_damage": 200, "damage_pct": 60.0}],
+             "cd_casts": [], "defensive_cds": [], "interrupt_count": 4}
+        ]}
+        segments = _aggregate_segment_data([report_a, report_b])
+        assert len(segments) == 1
+        assert segments[0].duration_median == 35.0  # median of 30, 40
+        assert segments[0].interrupt_count_median == 3.0  # median of 2, 4
+        assert segments[0].damage_breakdown[0].damage_pct == 55.0  # median of 50, 60
+
+    def test_aggregate_three_reports_cd_median(self):
+        """三份报告的 CD 施放次数取中位数。"""
+        from src.tools.mplus_benchmarks import _aggregate_segment_data
+
+        reports = []
+        for count in [1.0, 2.0, 3.0]:
+            reports.append({"segments": [
+                {"position": 0, "segment_type": "trash", "name": "Trash #1",
+                 "duration_sec": 30.0, "damage_breakdown": [],
+                 "cd_casts": [{"spell_name": "CA", "spell_id": 194223,
+                               "cast_count_median": count, "ability_type": "dps"}],
+                 "defensive_cds": [], "interrupt_count": 0}
+            ]})
+        segments = _aggregate_segment_data(reports)
+        assert segments[0].cd_casts[0].cast_count_median == 2.0
+
+    def test_aggregate_missing_position(self):
+        """不同报告段落数量不一致时，跳过缺失位置。"""
+        from src.tools.mplus_benchmarks import _aggregate_segment_data
+
+        report_a = {"segments": [
+            {"position": 0, "segment_type": "trash", "name": "Trash #1",
+             "duration_sec": 30.0, "damage_breakdown": [],
+             "cd_casts": [], "defensive_cds": [], "interrupt_count": 0},
+            {"position": 1, "segment_type": "boss", "name": "Boss",
+             "duration_sec": 60.0, "damage_breakdown": [],
+             "cd_casts": [], "defensive_cds": [], "interrupt_count": 0},
+        ]}
+        report_b = {"segments": [
+            {"position": 0, "segment_type": "trash", "name": "Trash #1",
+             "duration_sec": 40.0, "damage_breakdown": [],
+             "cd_casts": [], "defensive_cds": [], "interrupt_count": 0},
+        ]}
+        segments = _aggregate_segment_data([report_a, report_b])
+        # position 0 有两份报告，position 1 只有一份
+        assert len(segments) == 2
+        assert segments[0].duration_median == 35.0
+        assert segments[1].duration_median == 60.0
+
+
+# ============================================================
+# Full Pipeline Tests
+# ============================================================
+
+
+class TestGetMplusBenchmarks:
+    """完整管道集成（mock WCL 客户端）。"""
+
+    @pytest.mark.asyncio
+    async def test_returns_cached_result(self):
+        """缓存命中时直接返回。"""
+        from unittest.mock import AsyncMock, patch
+
+        from src.models import MplusBenchmarkMeta
+        from src.tools.mplus_benchmarks import get_mplus_benchmarks
+
+        cached = MplusBenchmarkResponse(
+            meta=MplusBenchmarkMeta(encounter_id=1, spec="balance-druid", key_level=10),
+            segments=[], cd_spacing=[],
+        ).model_dump()
+        with patch("src.tools.mplus_benchmarks.cache_get", return_value=cached):
+            client = AsyncMock()
+            result = await get_mplus_benchmarks(client, "balance-druid", 1, 10)
+            assert result.meta.encounter_id == 1
+            client.query.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_empty_rankings_returns_empty(self):
+        """排行榜无结果时返回空响应。"""
+        from unittest.mock import AsyncMock, patch
+
+        from src.models import MplusBenchmarkMeta
+        from src.tools.mplus_benchmarks import get_mplus_benchmarks
+
+        meta = MplusBenchmarkMeta(encounter_id=1, spec="balance-druid", key_level=10)
+        with patch("src.tools.mplus_benchmarks.cache_get", return_value=None), \
+             patch("src.tools.mplus_benchmarks.query_mplus_rankings", return_value=(meta, [])):
+            client = AsyncMock()
+            result = await get_mplus_benchmarks(client, "balance-druid", 1, 10)
+            assert result.segments == []
+            assert result.cd_spacing == []

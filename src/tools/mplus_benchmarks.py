@@ -11,11 +11,13 @@ WCL 数据流:
   5. Aggregate across 5 players with median
 
 公开接口:
+  - get_mplus_benchmarks(client, spec, encounter_id, key_level) -> MplusBenchmarkResponse
   - _build_segment_positions(fights, boss_names) -> list[dict]
   - _extract_segment_damage(entries, top_n) -> list[SegmentDamageBreakdown]
   - _extract_segment_cds(events, tracked_spells) -> (offensive, defensive)
   - _count_segment_interrupts(events) -> int
   - _compute_cd_spacing(segment_cds) -> list[dict]
+  - _aggregate_segment_data(all_reports) -> list[MplusBenchmarkSegment]
   - _fetch_report_benchmark_data(client, entry, spec, boss_names) -> dict | None
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
@@ -25,19 +27,26 @@ from __future__ import annotations
 # ============================================================
 # 标准库
 # ============================================================
+import asyncio
 import logging
+import statistics
 from collections import defaultdict
 
 # ============================================================
 # 本地模块
 # ============================================================
+from src.cache import cache_get, cache_set
 from src.models import (
+    MplusBenchmarkMeta,
+    MplusBenchmarkResponse,
+    MplusBenchmarkSegment,
     MplusRankingEntry,
     SegmentCDCast,
     SegmentDamageBreakdown,
 )
 from src.tools._wcl_helpers import find_actor_id_ci
 from src.tools.dungeon_analysis import _group_fights_by_dungeon, _query_all_fights
+from src.tools.mplus_rankings import query_mplus_rankings
 from src.tools.timelines import _build_tracked_spells, _query_master_data
 from src.wcl_client import WCLClient
 
@@ -418,9 +427,48 @@ async def _extract_boss_benchmark(
     """
     提取 boss 段落的 cast-level 基准数据。
 
-    Plan 03 实现完整管道集成，当前为占位函数。
+    查询 boss 战斗时间范围内的施法事件，统计每个技能的施放次数和 CPM。
     """
-    raise NotImplementedError("Plan 03 实现")
+    start = boss_fight["startTime"]
+    end = boss_fight["endTime"]
+    duration_sec = (end - start) / 1000.0
+
+    cast_events = await _query_segment_cast_events(
+        client, report_code, start, end, source_id
+    )
+
+    # 统计每个技能的施放次数
+    spell_counts: dict[int, dict] = {}
+    for ev in cast_events:
+        sid = ev.get("abilityGameID", 0)
+        name = ev.get("ability", {}).get("name", "") if isinstance(ev.get("ability"), dict) else ""
+        if not name:
+            # 从 tracked spells 获取名称
+            info = tracked.get(sid)
+            name = info["name"] if info else f"Spell#{sid}"
+        if sid not in spell_counts:
+            spell_counts[sid] = {"spell_name": name, "cast_count": 0}
+        spell_counts[sid]["cast_count"] += 1
+
+    # 构建 cast_stats
+    cast_stats = []
+    for sid, info in sorted(
+        spell_counts.items(), key=lambda x: x[1]["cast_count"], reverse=True
+    ):
+        cpm = round(info["cast_count"] / max(duration_sec / 60, 0.01), 1)
+        cast_stats.append({
+            "spell_name": info["spell_name"],
+            "spell_id": sid,
+            "cast_count": info["cast_count"],
+            "cpm": cpm,
+        })
+
+    return {
+        "boss_name": boss_fight.get("name", ""),
+        "position": boss_fight.get("position", 0),
+        "duration_sec": round(duration_sec, 1),
+        "cast_stats": cast_stats[:TOP_N_DAMAGE_SPELLS],
+    }
 
 
 async def _extract_single_segment(
@@ -458,3 +506,260 @@ async def _extract_single_segment(
         "defensive_cds": defensive,
         "interrupt_count": interrupt_count,
     }
+
+
+# ============================================================
+# Section 9: 跨玩家中位数聚合（纯函数）
+# ============================================================
+
+
+def _aggregate_segment_data(
+    all_reports: list[dict],
+) -> list[MplusBenchmarkSegment]:
+    """
+    跨多个报告聚合段落数据，使用中位数。
+
+    按 position 分组段落，对每个 position 的 duration、damage_pct、
+    cast_count、interrupt_count 取中位数。需要 >= 2 份报告才计算中位数。
+
+    Args:
+        all_reports: _fetch_report_benchmark_data 返回的报告列表
+
+    Returns:
+        按 position 排序的 MplusBenchmarkSegment 列表
+    """
+    # 按 position 分组
+    pos_map: dict[int, list[dict]] = defaultdict(list)
+    for report in all_reports:
+        for seg in report.get("segments", []):
+            pos_map[seg["position"]].append(seg)
+
+    results: list[MplusBenchmarkSegment] = []
+    for pos in sorted(pos_map.keys()):
+        segs = pos_map[pos]
+        if len(segs) < 1:
+            continue
+
+        # 基本信息从第一个报告取（所有报告共享 boss 结构）
+        first = segs[0]
+
+        # duration 中位数
+        duration_median = round(
+            statistics.median([s["duration_sec"] for s in segs]), 1
+        )
+
+        # 伤害分布聚合: 按 spell_id 分组，取 damage_pct 中位数
+        damage_breakdown = _aggregate_damage_breakdown(segs)
+
+        # CD 聚合: 按 spell_id 分组，取 cast_count 中位数
+        cd_casts = _aggregate_cd_casts(segs, "cd_casts")
+        defensive_cds = _aggregate_cd_casts(segs, "defensive_cds")
+
+        # 打断中位数
+        interrupt_median = round(
+            statistics.median([s["interrupt_count"] for s in segs]), 1
+        )
+
+        results.append(MplusBenchmarkSegment(
+            position=pos,
+            segment_type=first["segment_type"],
+            segment_name=first["name"],
+            duration_median=duration_median,
+            damage_breakdown=damage_breakdown,
+            cd_casts=cd_casts,
+            defensive_cds=defensive_cds,
+            interrupt_count_median=interrupt_median,
+        ))
+
+    return results
+
+
+def _aggregate_damage_breakdown(
+    segs: list[dict],
+) -> list[SegmentDamageBreakdown]:
+    """跨报告聚合伤害分布，按 spell_id 分组取 damage_pct 中位数。"""
+    spell_data: dict[int, dict] = {}
+    for seg in segs:
+        for dmg in seg.get("damage_breakdown", []):
+            # 支持 dict 或 SegmentDamageBreakdown 对象
+            if isinstance(dmg, dict):
+                sid = dmg.get("spell_id", 0)
+                name = dmg.get("spell_name", "")
+                pct = dmg.get("damage_pct", 0.0)
+                total = dmg.get("total_damage", 0.0)
+            else:
+                sid = dmg.spell_id
+                name = dmg.spell_name
+                pct = dmg.damage_pct
+                total = dmg.total_damage
+
+            if sid not in spell_data:
+                spell_data[sid] = {
+                    "spell_name": name, "pcts": [], "totals": [],
+                }
+            spell_data[sid]["pcts"].append(pct)
+            spell_data[sid]["totals"].append(total)
+
+    # 按中位数 damage_pct 降序取 TOP_N
+    result = []
+    for sid, info in spell_data.items():
+        median_pct = round(statistics.median(info["pcts"]), 1)
+        median_total = round(statistics.median(info["totals"]), 0)
+        result.append(SegmentDamageBreakdown(
+            spell_name=info["spell_name"],
+            spell_id=sid,
+            total_damage=median_total,
+            damage_pct=median_pct,
+        ))
+
+    result.sort(key=lambda x: x.damage_pct, reverse=True)
+    return result[:TOP_N_DAMAGE_SPELLS]
+
+
+def _aggregate_cd_casts(
+    segs: list[dict], key: str,
+) -> list[SegmentCDCast]:
+    """跨报告聚合 CD 施放，按 spell_id 分组取 cast_count 中位数。"""
+    spell_data: dict[int, dict] = {}
+    for seg in segs:
+        for cd in seg.get(key, []):
+            # 支持 dict 或 SegmentCDCast 对象
+            if isinstance(cd, dict):
+                sid = cd.get("spell_id", 0)
+                name = cd.get("spell_name", "")
+                count = cd.get("cast_count_median", 0.0)
+                atype = cd.get("ability_type", "")
+            else:
+                sid = cd.spell_id
+                name = cd.spell_name
+                count = cd.cast_count_median
+                atype = cd.ability_type
+
+            if sid not in spell_data:
+                spell_data[sid] = {
+                    "spell_name": name,
+                    "ability_type": atype,
+                    "counts": [],
+                }
+            spell_data[sid]["counts"].append(count)
+
+    result = []
+    for sid, info in spell_data.items():
+        median_count = round(statistics.median(info["counts"]), 1)
+        result.append(SegmentCDCast(
+            spell_name=info["spell_name"],
+            spell_id=sid,
+            cast_count_median=median_count,
+            ability_type=info["ability_type"],
+        ))
+    return result
+
+
+# ============================================================
+# Section 10: 公开管道函数（async 入口）
+# ============================================================
+
+
+async def get_mplus_benchmarks(
+    client: WCLClient,
+    spec: str,
+    encounter_id: int,
+    key_level: int,
+) -> MplusBenchmarkResponse:
+    """
+    获取 M+ 副本基准数据（公开接口）。
+
+    从 WCL 排行榜获取顶尖玩家报告，提取分段基准数据并聚合。
+    结果缓存 6 小时。消耗约 25-35 WCL 点数（5 报告 x 5-7 查询）。
+
+    Args:
+        client: WCL API 客户端
+        spec: 专精 slug，如 "balance-druid"
+        encounter_id: 副本遭遇 ID
+        key_level: 钥石等级
+
+    Returns:
+        MplusBenchmarkResponse 包含 meta + segments + cd_spacing
+    """
+    # Step 1: 检查缓存
+    cache_key = f"mplus_bench:{spec}:{encounter_id}:k{key_level}:segments"
+    cached = cache_get(cache_key, CACHE_TTL_SECONDS)
+    if cached is not None:
+        logger.info("M+ benchmarks 缓存命中: %s", cache_key)
+        return MplusBenchmarkResponse(**cached)
+
+    # Step 2: 获取排行榜
+    meta, entries = await query_mplus_rankings(
+        client, encounter_id, spec, key_level
+    )
+
+    # Step 3: 无结果时返回空响应
+    if not entries:
+        logger.warning("M+ benchmarks: 无排行榜条目 %s/%d/k%d", spec, encounter_id, key_level)
+        return MplusBenchmarkResponse(meta=meta, segments=[], cd_spacing=[])
+
+    # Step 4: 从第一份报告推导 boss 名称
+    boss_names = await _detect_boss_names(client, entries[0])
+
+    # Step 5: 并行获取报告（Semaphore 限制并发）
+    sem = asyncio.Semaphore(3)
+
+    async def _fetch_one(entry: MplusRankingEntry) -> dict | None:
+        async with sem:
+            try:
+                return await _fetch_report_benchmark_data(
+                    client, entry, spec, boss_names
+                )
+            except Exception as exc:
+                logger.warning("报告 %s 获取失败: %s", entry.report_code, exc)
+                return None
+
+    results = await asyncio.gather(*[_fetch_one(e) for e in entries])
+    valid = [r for r in results if r is not None]
+
+    # Step 6: 结果不足时记录警告
+    if len(valid) < 2:
+        logger.warning(
+            "M+ benchmarks: 有效报告仅 %d 份（%s/%d/k%d）",
+            len(valid), spec, encounter_id, key_level,
+        )
+
+    # Step 7: 空结果直接返回
+    if not valid:
+        return MplusBenchmarkResponse(meta=meta, segments=[], cd_spacing=[])
+
+    # Step 8: 聚合
+    segments = _aggregate_segment_data(valid)
+
+    # Step 9: CD 分布模式
+    cd_spacing = _compute_cd_spacing(
+        {seg.position: seg.cd_casts for seg in segments}
+    )
+
+    # Step 10: 构建响应并缓存
+    response = MplusBenchmarkResponse(
+        meta=meta, segments=segments, cd_spacing=cd_spacing
+    )
+    cache_set(cache_key, response.model_dump())
+
+    logger.info(
+        "M+ benchmarks 完成: %s/%d/k%d, %d 段落, %d 报告",
+        spec, encounter_id, key_level, len(segments), len(valid),
+    )
+    return response
+
+
+async def _detect_boss_names(
+    client: WCLClient, entry: MplusRankingEntry,
+) -> list[str]:
+    """从第一份报告推导 boss 名称列表。"""
+    try:
+        fights, _ = await _query_all_fights(client, entry.report_code)
+        return [
+            f.get("name", "")
+            for f in fights
+            if f.get("encounterID", 0) > 0 and f.get("name")
+        ]
+    except Exception as exc:
+        logger.warning("Boss 名称检测失败 %s: %s", entry.report_code, exc)
+        return []
