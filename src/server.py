@@ -2,7 +2,7 @@
 WoW 团本 / 大秘境教练 MCP 服务器 — 入口模块。
 
 传输协议: stdio（stdout 专用于 JSON-RPC，日志全部走 stderr）
-工具注册: get_encounters, get_top_builds, get_spec_info, get_cooldown_timelines, get_rotation_profile, get_defensive_patterns, get_example_logs, analyze_player_log, analyze_dungeon_run, get_mplus_benchmarks, compare_mplus_run, get_cast_sequence, get_buff_timeline, get_resource_timeline, get_boss_cast_timeline, get_coaching_context
+工具注册: get_encounters, get_top_builds, get_spec_info, get_cooldown_timelines, get_rotation_profile, get_defensive_patterns, get_example_logs, analyze_player_log, analyze_dungeon_run, get_mplus_benchmarks, compare_mplus_run, coach_mplus_run, get_cast_sequence, get_buff_timeline, get_resource_timeline, get_boss_cast_timeline, get_coaching_context
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
 """
@@ -41,6 +41,7 @@ from src.tools.boss_timeline import get_boss_cast_timeline as _get_boss_cast_tim
 from src.tools.dungeon_analysis import analyze_dungeon_run as _analyze_dungeon_run
 from src.tools.mplus_benchmarks import get_mplus_benchmarks as _get_mplus_benchmarks
 from src.tools.mplus_comparison import compare_mplus_run as _compare_mplus_run
+from src.tools.mplus_coaching import coach_mplus_run as _coach_mplus_run
 from src.wcl_client import WCLClient
 
 # ============================================================
@@ -484,6 +485,50 @@ async def compare_mplus_run(
     """
     client = _get_wcl_client()
     result = await _compare_mplus_run(
+        client, report_code, player_name, encounter_id, spec, key_level, fight
+    )
+    return result.model_dump()
+
+
+# ============================================================
+# 工具: coach_mplus_run
+# ============================================================
+
+
+@mcp.tool()
+async def coach_mplus_run(
+    report_code: str,
+    player_name: str,
+    encounter_id: int,
+    spec: str,
+    key_level: int,
+    fight: str = "last",
+) -> dict:
+    """
+    Produce actionable per-segment coaching for an entire M+ dungeon run.
+
+    Calls compare_mplus_run internally, then transforms comparison data into
+    prioritized coaching advice. Returns both structured gap data (machine-readable)
+    and natural language advice (human-readable).
+
+    Output includes:
+    - Per-trash-segment coaching: top 3 gaps sorted by DPS impact with specific advice
+    - Per-boss coaching: top 3 cast/CD issues with actionable fix suggestions
+    - Death coaching: per-death analysis with defensive availability notes
+    - Dungeon summary: overall gap counts + top 5 improvement areas
+
+    Cost: Same as compare_mplus_run (~50-100 WCL points depending on dungeon length).
+
+    Args:
+        report_code: WCL report code (e.g., "a1b2C3d4E5f6G7h8")
+        player_name: Character name (case-insensitive)
+        encounter_id: Dungeon encounter ID from get_encounters
+        spec: Spec slug like "balance-druid"
+        key_level: Keystone level to benchmark against (e.g., 10)
+        fight: Which run — "last" (default), index ("1","2"), or name
+    """
+    client = _get_wcl_client()
+    result = await _coach_mplus_run(
         client, report_code, player_name, encounter_id, spec, key_level, fight
     )
     return result.model_dump()
