@@ -26,13 +26,13 @@ Requirements for M+ Coaching Intelligence milestone. Each maps to roadmap phases
 
 ### Boss Analysis
 
-- [ ] **BOSS-01**: Agent can run raid-style cast-by-cast analysis on each boss within a M+ dungeon (reuse existing analyze_player_log patterns)
-- [ ] **BOSS-02**: Agent can compare player's boss performance against top-player benchmarks (rotation, CDs, defensives)
+- [x] **BOSS-01**: Agent can run raid-style cast-by-cast analysis on each boss within a M+ dungeon (reuse existing analyze_player_log patterns)
+- [x] **BOSS-02**: Agent can compare player's boss performance against top-player benchmarks (rotation, CDs, defensives)
 
 ### Survival
 
 - [x] **SURV-01**: Agent can retrieve defensive CD usage patterns from top M+ players across boss-bounded segments
-- [ ] **SURV-02**: Agent can analyze player deaths with damage-taken breakdown and defensive availability check
+- [x] **SURV-02**: Agent can analyze player deaths with damage-taken breakdown and defensive availability check
 
 ### Interrupts
 
@@ -85,10 +85,10 @@ Deferred to future release.
 | CD-02 | Phase 9 | Complete |
 | DMG-01 | Phase 9 | Complete |
 | DMG-02 | Phase 10 | Complete |
-| BOSS-01 | Phase 10 | Pending |
-| BOSS-02 | Phase 10 | Pending |
+| BOSS-01 | Phase 10 | Complete |
+| BOSS-02 | Phase 10 | Complete |
 | SURV-01 | Phase 9 | Complete |
-| SURV-02 | Phase 10 | Pending |
+| SURV-02 | Phase 10 | Complete |
 | INT-01 | Phase 9 | Complete |
 | INT-02 | Phase 10 | Complete |
 | COACH-01 | Phase 11 | Pending |
