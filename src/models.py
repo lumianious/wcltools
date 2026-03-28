@@ -7,6 +7,7 @@ Pydantic 数据模型 — WCL 数据结构定义。
   - get_cooldown_timelines (Phase 3): CastCluster, AbilityTimeline, CooldownTimelineResponse
   - get_rotation_profile (Phase 4): SpellStats, BuffUptime, RotationProfileResponse
   - analyze_player_log (Phase 5): SpellGap, CooldownIssue, DefensiveIssue, BuildDivergence, PlayerAnalysisResponse
+  - analyze_dungeon_run (Phase 8): FightSegmentSummary, DungeonRunAnalysisResponse
   - 通用: RateLimitInfo
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
@@ -634,3 +635,49 @@ class EclipseMetrics(BaseModel):
     avg_eclipse_gap_sec: float = 0.0
     ca_eclipse_coverage_pct: float = 0.0
     starlord_uptime_pct: float = 0.0
+
+
+# ============================================================
+# Phase 8: M+ 副本整体分析
+# ============================================================
+
+
+class FightSegmentSummary(BaseModel):
+    """M+ 副本中单个战斗段落摘要。"""
+
+    fight_id: int
+    name: str
+    is_boss: bool
+    duration_sec: float
+    player_dps: float
+    deaths: int
+
+
+class DungeonRunAnalysisResponse(BaseModel):
+    """analyze_dungeon_run 工具返回值 — M+ 副本整体分析。"""
+
+    report_code: str
+    player_name: str
+    spec: str
+    dungeon_name: str = ""
+    keystone_level: int = 0
+    total_duration_sec: float = 0.0
+    active_time_sec: float = 0.0
+    total_dps: float = 0.0
+    total_damage: float = 0.0
+    total_deaths: int = 0
+    death_times: list[float] = []
+    damage_by_ability: list[dict] = Field(
+        default_factory=list, description="[{name, total, pct}] 伤害技能排行（前15）"
+    )
+    buff_uptimes: list[dict] = Field(
+        default_factory=list, description="[{name, uptime_pct}] Buff 覆盖率"
+    )
+    segments: list[FightSegmentSummary] = Field(default_factory=list)
+    item_level: float = 0.0
+    player_talents: list[str] = []
+    spell_counts: dict[str, int] = Field(
+        default_factory=dict, description="技能施法统计（仅 include_casts=True 时填充）"
+    )
+    active_time_pct: float = 0.0
+    top_issues: list[str] = []

@@ -2,7 +2,7 @@
 WoW 团本 / 大秘境教练 MCP 服务器 — 入口模块。
 
 传输协议: stdio（stdout 专用于 JSON-RPC，日志全部走 stderr）
-工具注册: get_encounters, get_top_builds, get_spec_info, get_cooldown_timelines, get_rotation_profile, get_defensive_patterns, get_example_logs, analyze_player_log, get_cast_sequence, get_buff_timeline, get_resource_timeline, get_boss_cast_timeline, get_coaching_context
+工具注册: get_encounters, get_top_builds, get_spec_info, get_cooldown_timelines, get_rotation_profile, get_defensive_patterns, get_example_logs, analyze_player_log, analyze_dungeon_run, get_cast_sequence, get_buff_timeline, get_resource_timeline, get_boss_cast_timeline, get_coaching_context
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
 """
@@ -38,6 +38,7 @@ from src.tools.cast_sequence import get_cast_sequence as _get_cast_sequence
 from src.tools.buff_timeline import get_buff_timeline as _get_buff_timeline
 from src.tools.resource_timeline import get_resource_timeline as _get_resource_timeline
 from src.tools.boss_timeline import get_boss_cast_timeline as _get_boss_cast_timeline
+from src.tools.dungeon_analysis import analyze_dungeon_run as _analyze_dungeon_run
 from src.wcl_client import WCLClient
 
 # ============================================================
@@ -359,6 +360,46 @@ async def analyze_player_log(
         player=player,
         spec=spec,
         difficulty=difficulty,
+    )
+    return result.model_dump()
+
+
+# ============================================================
+# 工具: analyze_dungeon_run
+# ============================================================
+
+
+@mcp.tool()
+async def analyze_dungeon_run(
+    report: str,
+    player: str,
+    spec: str,
+    include_casts: bool = False,
+) -> dict:
+    """
+    Analyze a player's performance across an entire M+ dungeon run.
+
+    Aggregates damage, deaths, buff uptimes, and optionally cast data
+    across all fight segments (bosses + trash) in the report. Returns
+    overall DPS (using active fight time, not wall-clock), per-segment
+    breakdown, and top improvement areas.
+
+    Accepts a report code or full WCL URL. Default cost: ~5-7 WCL points.
+    With include_casts=True: +30-100 points (full cast pagination).
+
+    Args:
+        report: WCL report code or full URL
+        player: Character name (case-insensitive)
+        spec: Class spec slug, e.g. "balance-druid", "frost-death-knight"
+        include_casts: Enable full cast analysis (expensive, default false)
+    """
+    client = _get_wcl_client()
+    result = await _analyze_dungeon_run(
+        client,
+        report=report,
+        player=player,
+        spec=spec,
+        include_casts=include_casts,
     )
     return result.model_dump()
 

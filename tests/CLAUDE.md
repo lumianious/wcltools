@@ -29,6 +29,7 @@
 | `test_buff_timeline.py` | Buff 事件时间线 | Phase 7 |
 | `test_resource_timeline.py` | 资源变化时间线 | Phase 7 |
 | `test_phase7.py` | Phase 7 综合集成测试 | Phase 7 |
+| `test_dungeon_analysis.py` | `analyze_dungeon_run` 工具 | Phase 8 |
 
 ## 测试约定
 

@@ -12,6 +12,7 @@
 | `_analysis_comparisons.py` | 玩家 vs 基准对比分析（循环/冷却/防御/天赋/输出） | `compare_rotation`, `compare_cooldowns`, `compare_defensives`, `compare_build`, `compare_talent_usage`, `compare_cd_throughput` |
 | `_analysis_metrics.py` | 分析指标计算（死亡/停工/CD窗口/Eclipse/问题归纳） | `analyze_deaths`, `analyze_downtime`, `analyze_cd_windows`, `analyze_eclipse_metrics`, `summarize_top_issues` |
 | `analyze.py` | `analyze_player_log` 工具 — 玩家日志分析编排器 | `analyze_player_log` |
+| `dungeon_analysis.py` | `analyze_dungeon_run` 工具 — M+ 副本整体分析 | `analyze_dungeon_run` |
 | `boss_timeline.py` | `get_boss_cast_timeline` 工具 — Boss 施法时间线 | `get_boss_cast_timeline` |
 | `buff_timeline.py` | `get_buff_timeline` 工具 — Buff 事件时间线 | `get_buff_timeline` |
 | `builds.py` | `get_top_builds` 工具 — 热门天赋构建 | `get_top_builds` |
@@ -30,6 +31,7 @@
 ```
 server.py → 各工具模块（注册 MCP 工具）
 analyze.py → _wcl_helpers, _analysis_comparisons, _analysis_metrics, rotation, builds, defensives, timelines
+dungeon_analysis.py → _wcl_helpers, analyze, rotation, data
 buff_timeline.py → _wcl_helpers, rotation
 cast_sequence.py → _wcl_helpers, rotation
 resource_timeline.py → _wcl_helpers, rotation
