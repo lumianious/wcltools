@@ -4,6 +4,7 @@ M+ Comparison Engine — 玩家表现与基准数据的对比分析。
 Pipeline: player data + benchmark data -> per-segment comparison -> gap flagging
 
 公开接口:
+  - compare_mplus_run(client, report_code, player_name, encounter_id, spec, key_level, fight) -> MplusComparisonResponse
   - _compute_gap(player_value, benchmark_value) -> dict
   - _compare_trash_damage(player_damage, bench_damage) -> list[SegmentDamageGap]
   - _compare_interrupts(player_count, player_targets, bench_count_median, bench_targets) -> dict
@@ -12,6 +13,11 @@ Pipeline: player data + benchmark data -> per-segment comparison -> gap flagging
   - _check_defensive_availability(death_ts, cast_events, tracked_spells) -> list[dict]
   - _build_death_breakdown(death_event, damage_taken_events, cast_events, tracked_spells, ...) -> DeathBreakdown
   - _query_damage_taken_events(client, report_code, start_time, end_time, target_id) -> list[dict]
+  - _align_segments(player_segs, bench_segs) -> list[tuple]
+  - _extract_player_segment_data(client, report_code, segment, source_id, tracked) -> dict
+  - _build_segment_comparison(player_data, bench_seg) -> SegmentComparison
+  - _analyze_player_deaths(client, report_code, run_start, run_end, source_id, tracked, segments, max_deaths) -> list[DeathBreakdown]
+  - _build_summary(segment_comparisons, boss_comparisons, death_analysis, interrupt_summary) -> dict
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
 """
@@ -23,6 +29,9 @@ from collections import defaultdict
 from src.models import (
     BossCastComparison,
     DeathBreakdown,
+    MplusBenchmarkSegment,
+    MplusComparisonResponse,
+    SegmentComparison,
     SegmentDamageBreakdown,
     SegmentDamageGap,
 )
@@ -437,3 +446,516 @@ async def _query_damage_taken_events(
         all_events.extend(block.get("data", []))
         next_ts = block.get("nextPageTimestamp")
     return all_events
+
+
+# ============================================================
+# 段落对齐 — 按 position 匹配玩家与基准段落
+# ============================================================
+
+
+def _align_segments(
+    player_segs: list[dict],
+    bench_segs: list[MplusBenchmarkSegment],
+) -> list[tuple[dict, MplusBenchmarkSegment | None]]:
+    """按 position 将玩家段落与基准段落配对。
+
+    玩家可能有多余段落（基准无对应），此时返回 (player_seg, None)。
+    """
+    bench_by_pos = {s.position: s for s in bench_segs}
+    return [(seg, bench_by_pos.get(seg["position"])) for seg in player_segs]
+
+
+# ============================================================
+# 玩家段落数据提取 (async)
+# ============================================================
+
+
+async def _extract_player_segment_data(
+    client,
+    report_code: str,
+    segment: dict,
+    source_id: int,
+    tracked: dict[int, dict],
+) -> dict:
+    """提取单个玩家段落的 damage/CD/interrupt 数据。
+
+    对 trash 段落: 查询 damage table + cast events + interrupt events。
+    对 boss 段落: 查询 cast events（用于 cast-by-cast 对比）。
+    """
+    from src.tools.mplus_benchmarks import (
+        _count_segment_interrupts,
+        _extract_segment_cds,
+        _extract_segment_damage,
+        _query_segment_cast_events,
+        _query_segment_damage_table,
+        _query_segment_interrupt_events,
+    )
+
+    start = segment["start_time"]
+    end = segment["end_time"]
+    seg_type = segment["segment_type"]
+
+    result = {
+        "position": segment["position"],
+        "segment_type": seg_type,
+        "name": segment["name"],
+        "start_time": start,
+        "end_time": end,
+        "duration_sec": round((end - start) / 1000.0, 1),
+    }
+
+    if seg_type == "trash":
+        # 三类数据并行查询
+        damage_entries = await _query_segment_damage_table(
+            client, report_code, start, end, source_id
+        )
+        cast_events = await _query_segment_cast_events(
+            client, report_code, start, end, source_id
+        )
+        interrupt_events = await _query_segment_interrupt_events(
+            client, report_code, start, end, source_id
+        )
+
+        result["damage_breakdown"] = _extract_segment_damage(damage_entries)
+        offensive, defensive = _extract_segment_cds(cast_events, tracked)
+        result["cd_casts"] = offensive
+        result["defensive_cds"] = defensive
+        result["interrupt_count"] = _count_segment_interrupts(interrupt_events)
+        # 提取打断目标 spell_id 集合
+        result["interrupt_target_ids"] = {
+            ev.get("abilityGameID", 0) for ev in interrupt_events
+        }
+    else:
+        # boss 段落: 查询 cast events 用于 cast-by-cast 对比
+        cast_events = await _query_segment_cast_events(
+            client, report_code, start, end, source_id
+        )
+        # 统计施法次数和名称
+        spell_counts: dict[int, int] = defaultdict(int)
+        spell_names: dict[int, str] = {}
+        for ev in cast_events:
+            sid = ev.get("abilityGameID", 0)
+            spell_counts[sid] += 1
+            if sid not in spell_names:
+                ability = ev.get("ability")
+                name = ability.get("name", "") if isinstance(ability, dict) else ""
+                if not name:
+                    info = tracked.get(sid)
+                    name = info["name"] if info else f"Spell#{sid}"
+                spell_names[sid] = name
+
+        result["spell_counts"] = dict(spell_counts)
+        result["spell_names"] = spell_names
+        result["cast_events"] = cast_events
+        # boss 段落也查询 CD 数据用于 BOSS-02
+        offensive, defensive = _extract_segment_cds(cast_events, tracked)
+        result["cd_casts"] = offensive
+        result["defensive_cds"] = defensive
+
+    return result
+
+
+# ============================================================
+# 段落对比构建
+# ============================================================
+
+
+def _build_segment_comparison(
+    player_data: dict,
+    bench_seg: MplusBenchmarkSegment | None,
+) -> SegmentComparison:
+    """构建单个 trash 段落的对比结果。
+
+    如果无对应 benchmark，标记 status="no_benchmark"。
+    """
+    pos = player_data["position"]
+    seg_type = player_data["segment_type"]
+    seg_name = player_data["name"]
+
+    if bench_seg is None:
+        return SegmentComparison(
+            position=pos,
+            segment_type=seg_type,
+            segment_name=seg_name,
+            status="no_benchmark",
+        )
+
+    # --- 伤害对比 ---
+    damage_gaps = _compare_trash_damage(
+        player_data.get("damage_breakdown", []),
+        bench_seg.damage_breakdown,
+    )
+
+    # --- CD 对比 ---
+    cd_gaps: list[dict] = []
+    player_cds = player_data.get("cd_casts", [])
+    bench_cds = bench_seg.cd_casts
+    bench_cd_by_id = {cd.spell_id: cd for cd in bench_cds}
+    player_cd_by_id = {}
+    for cd in player_cds:
+        # 支持 dict 或 SegmentCDCast 对象
+        sid = cd.spell_id if hasattr(cd, "spell_id") else cd.get("spell_id", 0)
+        name = cd.spell_name if hasattr(cd, "spell_name") else cd.get("spell_name", "")
+        count = cd.cast_count_median if hasattr(cd, "cast_count_median") else cd.get("cast_count_median", 0)
+        player_cd_by_id[sid] = {"spell_name": name, "count": count}
+
+    for sid, bcd in bench_cd_by_id.items():
+        p_info = player_cd_by_id.get(sid)
+        p_count = p_info["count"] if p_info else 0.0
+        gap = _compute_gap(float(p_count), float(bcd.cast_count_median))
+        cd_gaps.append({
+            "spell_name": bcd.spell_name,
+            "spell_id": sid,
+            "player_casts": p_count,
+            "benchmark_median": bcd.cast_count_median,
+            "gap_pct": gap["gap_pct"],
+            "flagged": gap["flagged"],
+        })
+
+    # --- 打断对比 ---
+    interrupt_comp = _compare_interrupts(
+        player_count=player_data.get("interrupt_count", 0),
+        player_targets=player_data.get("interrupt_target_ids", set()),
+        bench_count_median=bench_seg.interrupt_count_median,
+        bench_targets=set(),  # benchmark 不存储个别目标 ID
+    )
+
+    return SegmentComparison(
+        position=pos,
+        segment_type=seg_type,
+        segment_name=seg_name,
+        status="compared",
+        damage_gaps=damage_gaps,
+        cd_gaps=cd_gaps,
+        interrupt_comparison=interrupt_comp,
+    )
+
+
+# ============================================================
+# 死亡分析编排 (async)
+# ============================================================
+
+
+async def _analyze_player_deaths(
+    client,
+    report_code: str,
+    run_start: int,
+    run_end: int,
+    source_id: int,
+    tracked: dict[int, dict],
+    segments: list[dict],
+    max_deaths: int = _MAX_DEATHS_PER_RUN,
+) -> list[DeathBreakdown]:
+    """分析玩家死亡事件，返回 DeathBreakdown 列表。
+
+    Cap 最多 max_deaths 次（默认 5），控制 API 预算。
+    """
+    from src.tools.analyze import _query_death_events
+    from src.tools.mplus_benchmarks import _query_segment_cast_events
+
+    death_events = await _query_death_events(
+        client, report_code, run_start, run_end, source_id
+    )
+    death_events = death_events[:max_deaths]
+
+    if not death_events:
+        return []
+
+    # 查询整个副本的 cast events（用于防御技能可用性判断）
+    cast_events = await _query_segment_cast_events(
+        client, report_code, run_start, run_end, source_id
+    )
+
+    results: list[DeathBreakdown] = []
+    for death_ev in death_events:
+        death_ts = death_ev.get("timestamp", 0)
+
+        # 确定死亡所在段落
+        seg_pos = 0
+        seg_name = "Unknown"
+        for seg in segments:
+            if seg["start_time"] <= death_ts <= seg["end_time"]:
+                seg_pos = seg["position"]
+                seg_name = seg["name"]
+                break
+
+        # 查询死亡前 15s 的 DamageTaken 事件
+        dt_start = max(death_ts - 15000, run_start)
+        damage_taken = await _query_damage_taken_events(
+            client, report_code, dt_start, death_ts, source_id
+        )
+
+        bd = _build_death_breakdown(
+            death_event=death_ev,
+            damage_taken_events=damage_taken,
+            cast_events=cast_events,
+            tracked_spells=tracked,
+            segment_position=seg_pos,
+            segment_name=seg_name,
+            run_start_time=run_start,
+        )
+        results.append(bd)
+
+    return results
+
+
+# ============================================================
+# 汇总构建
+# ============================================================
+
+
+def _build_summary(
+    segment_comparisons: list[SegmentComparison],
+    boss_comparisons: list[BossCastComparison],
+    death_analysis: list[DeathBreakdown],
+    interrupt_summary: dict,
+) -> dict:
+    """构建对比汇总 — 统计各类 flag 数量和最差段落。"""
+    total_damage_flags = 0
+    total_cd_flags = 0
+    total_interrupt_flags = 0
+    segment_flag_counts: list[tuple[int, str, int]] = []
+
+    for sc in segment_comparisons:
+        if sc.status == "no_benchmark":
+            continue
+        dmg_flags = sum(1 for g in sc.damage_gaps if g.flagged)
+        cd_flags = sum(1 for g in sc.cd_gaps if g.get("flagged", False))
+        int_flagged = 1 if sc.interrupt_comparison.get("count_flagged", False) else 0
+
+        total_damage_flags += dmg_flags
+        total_cd_flags += cd_flags
+        total_interrupt_flags += int_flagged
+
+        seg_total = dmg_flags + cd_flags + int_flagged
+        segment_flag_counts.append((sc.position, sc.segment_name, seg_total))
+
+    # boss comparison flags
+    for bc in boss_comparisons:
+        cd_flags = sum(1 for g in bc.cd_gaps if g.get("flagged", False))
+        total_cd_flags += cd_flags
+
+    # 最差 3 个段落
+    segment_flag_counts.sort(key=lambda x: x[2], reverse=True)
+    worst_segments = [
+        {"position": pos, "name": name, "flag_count": count}
+        for pos, name, count in segment_flag_counts[:3]
+        if count > 0
+    ]
+
+    return {
+        "total_damage_flags": total_damage_flags,
+        "total_cd_flags": total_cd_flags,
+        "total_deaths": len(death_analysis),
+        "total_interrupt_flags": total_interrupt_flags,
+        "worst_segments": worst_segments,
+    }
+
+
+# ============================================================
+# 编排器: compare_mplus_run (MCP 工具入口)
+# ============================================================
+
+
+async def compare_mplus_run(
+    client,
+    report_code: str,
+    player_name: str,
+    encounter_id: int,
+    spec: str,
+    key_level: int,
+    fight: str = "last",
+) -> MplusComparisonResponse:
+    """对比玩家 M+ 副本表现与顶尖玩家基准。
+
+    Pipeline:
+      a. 获取玩家副本数据 (fights -> group -> select)
+      b. 获取 benchmark 数据 (get_mplus_benchmarks)
+      c. 获取 source_id (masterData -> find_actor_id_ci)
+      d. 构建 tracked spells
+      e. 构建玩家段落 (boss-bounded position alignment)
+      f. 逐段提取玩家数据
+      g. 对齐并对比 (trash段) / cast-by-cast (boss段)
+      h. 死亡分析
+      i. 打断汇总
+      j. 汇总
+      k. 返回 MplusComparisonResponse
+
+    Args:
+        client: WCL API 客户端
+        report_code: 报告代码
+        player_name: 角色名（大小写不敏感）
+        encounter_id: 副本遭遇 ID
+        spec: 专精 slug，如 "balance-druid"
+        key_level: 钥石等级
+        fight: 选择哪个副本 run（默认 "last"）
+
+    Returns:
+        MplusComparisonResponse 完整对比结果
+    """
+    from src.tools._wcl_helpers import find_actor_id_ci
+    from src.tools.dungeon_analysis import (
+        _group_fights_by_dungeon,
+        _query_all_fights,
+        _select_dungeon_run,
+    )
+    from src.tools.mplus_benchmarks import (
+        _build_segment_positions,
+        _extract_boss_benchmark,
+        get_mplus_benchmarks,
+    )
+    from src.tools.timelines import _build_tracked_spells
+    from src.tools.timelines import _query_master_data
+
+    logger.info(
+        "compare_mplus_run: %s in %s spec=%s encounter=%d key=%d fight=%s",
+        player_name, report_code, spec, encounter_id, key_level, fight,
+    )
+
+    # ---- (a) 获取玩家副本数据 ----
+    fights, _ = await _query_all_fights(client, report_code)
+    runs = _group_fights_by_dungeon(fights)
+    selected_run = _select_dungeon_run(runs, fight)
+    dungeon_name = selected_run.zone_name
+
+    # 取 segment fights（排除聚合 fight）
+    seg_fights = selected_run.segment_fights
+    if not seg_fights:
+        raise ValueError(f"副本 '{dungeon_name}' 中无有效战斗段落")
+
+    # ---- (b) 获取 benchmark 数据 ----
+    bench_resp = await get_mplus_benchmarks(client, spec, encounter_id, key_level)
+
+    # ---- (c) 获取 source_id ----
+    actors = await _query_master_data(client, report_code)
+    source_id = find_actor_id_ci(actors, player_name)
+    if source_id is None:
+        raise ValueError(f"未找到玩家 '{player_name}' in report {report_code}")
+
+    # ---- (d) 构建 tracked spells ----
+    tracked = _build_tracked_spells(spec)
+
+    # ---- (e) 构建玩家段落 ----
+    # 从 benchmark 段落推导 boss 名称
+    boss_names = [
+        s.segment_name for s in bench_resp.segments if s.segment_type == "boss"
+    ]
+    # 也从 fights 推导（更可靠）
+    if not boss_names:
+        boss_names = [
+            f.get("name", "") for f in fights
+            if f.get("encounterID", 0) > 0 and f.get("name")
+        ]
+    player_segs = _build_segment_positions(seg_fights, boss_names)
+
+    # ---- (f) 逐段提取玩家数据 ----
+    player_seg_data: list[dict] = []
+    for seg in player_segs:
+        try:
+            data = await _extract_player_segment_data(
+                client, report_code, seg, source_id, tracked
+            )
+            player_seg_data.append(data)
+        except Exception as exc:
+            logger.warning("段落 %d 数据提取失败: %s", seg["position"], exc)
+
+    # ---- (g) 对齐并对比 ----
+    aligned = _align_segments(player_seg_data, bench_resp.segments)
+
+    segment_comparisons: list[SegmentComparison] = []
+    boss_comparisons: list[BossCastComparison] = []
+
+    for p_seg, b_seg in aligned:
+        if p_seg["segment_type"] == "trash":
+            comp = _build_segment_comparison(p_seg, b_seg)
+            segment_comparisons.append(comp)
+        else:
+            # Boss 段落: cast-by-cast 对比
+            boss_name = p_seg["name"]
+            duration_sec = p_seg["duration_sec"]
+
+            # 找到 benchmark boss 段落的 cast_stats
+            bench_cast_stats: list[dict] = []
+            bench_dur = 0.0
+            if b_seg is not None:
+                # benchmark 段落有 cd_casts 但没有 cast_stats
+                # 使用 cd_casts 作为 cast_stats 的来源
+                for cd in b_seg.cd_casts:
+                    bench_cast_stats.append({
+                        "spell_id": cd.spell_id,
+                        "spell_name": cd.spell_name,
+                        "cast_count": int(cd.cast_count_median),
+                        "cpm": 0.0,
+                    })
+                bench_dur = b_seg.duration_median
+
+            # BOSS-01: cast-level 对比
+            cast_comp = _compare_boss_casts(
+                player_spell_counts=p_seg.get("spell_counts", {}),
+                player_spell_names=p_seg.get("spell_names", {}),
+                player_duration=duration_sec,
+                bench_spell_stats=bench_cast_stats,
+            )
+
+            # BOSS-02: CD 对比
+            cd_gaps = _compare_boss_cds(
+                player_spell_counts=p_seg.get("spell_counts", {}),
+                player_spell_names=p_seg.get("spell_names", {}),
+                tracked=tracked,
+                fight_duration=duration_sec,
+            )
+
+            boss_comparisons.append(BossCastComparison(
+                boss_name=boss_name,
+                position=p_seg["position"],
+                player_duration_sec=duration_sec,
+                benchmark_duration_sec=bench_dur,
+                cast_gaps=cast_comp.cast_gaps,
+                cd_gaps=cd_gaps,
+                status=cast_comp.status,
+            ))
+
+    # ---- (h) 死亡分析 ----
+    run_start = min(s["start_time"] for s in player_segs)
+    run_end = max(s["end_time"] for s in player_segs)
+
+    death_analysis = await _analyze_player_deaths(
+        client, report_code, run_start, run_end,
+        source_id, tracked, player_segs,
+    )
+
+    # ---- (i) 打断汇总 ----
+    total_player_interrupts = sum(
+        d.get("interrupt_count", 0) for d in player_seg_data
+        if d["segment_type"] == "trash"
+    )
+    total_bench_interrupts = sum(
+        s.interrupt_count_median for s in bench_resp.segments
+        if s.segment_type == "trash"
+    )
+    interrupt_summary = _compare_interrupts(
+        player_count=total_player_interrupts,
+        player_targets=set(),
+        bench_count_median=total_bench_interrupts,
+        bench_targets=set(),
+    )
+
+    # ---- (j) 汇总 ----
+    summary = _build_summary(
+        segment_comparisons, boss_comparisons, death_analysis, interrupt_summary,
+    )
+
+    # ---- (k) 返回 ----
+    return MplusComparisonResponse(
+        report_code=report_code,
+        player_name=player_name,
+        spec=spec,
+        dungeon_name=dungeon_name,
+        key_level=key_level,
+        benchmark_key_level=bench_resp.meta.actual_bracket or key_level,
+        segment_comparisons=segment_comparisons,
+        boss_comparisons=boss_comparisons,
+        death_analysis=death_analysis,
+        interrupt_summary=interrupt_summary,
+        summary=summary,
+    )

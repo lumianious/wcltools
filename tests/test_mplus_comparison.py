@@ -7,12 +7,16 @@
 #   BOSS-01 (boss cast-level comparison)
 #   BOSS-02 (boss CD/defensive comparison)
 #   SURV-02 (death analysis with defensive availability)
+#   Orchestrator (segment alignment + summary + compare_mplus_run)
 #
 # [PROTOCOL]: 变更时更新此文档，然后检查父级
 # ============================================================
 from __future__ import annotations
 
 from src.models import (
+    DeathBreakdown,
+    MplusBenchmarkSegment,
+    SegmentComparison,
     SegmentDamageBreakdown,
     SegmentDamageGap,
 )
@@ -264,3 +268,111 @@ class TestDeathAnalysis:
         assert result.damage_taken_sources[0]["amount"] == 15000
         assert result.damage_taken_sources[1]["amount"] == 8000
         assert result.damage_taken_sources[2]["amount"] == 5000
+
+
+# ============================================================
+# Orchestrator Tests (compare_mplus_run pipeline)
+# ============================================================
+
+
+class TestCompareOrchestrator:
+    """编排器测试 — 段落对齐、汇总构建、无 benchmark 处理。"""
+
+    def test_align_segments_matching(self):
+        """3 个玩家段落 + 3 个 benchmark 段落，全部按 position 对齐。"""
+        from src.tools.mplus_comparison import _align_segments
+
+        player_segs = [
+            {"position": 0, "segment_type": "trash", "name": "Trash #1"},
+            {"position": 1, "segment_type": "boss", "name": "Boss #1"},
+            {"position": 2, "segment_type": "trash", "name": "Trash #2"},
+        ]
+        bench_segs = [
+            MplusBenchmarkSegment(position=0, segment_type="trash", segment_name="Trash #1"),
+            MplusBenchmarkSegment(position=1, segment_type="boss", segment_name="Boss #1"),
+            MplusBenchmarkSegment(position=2, segment_type="trash", segment_name="Trash #2"),
+        ]
+        aligned = _align_segments(player_segs, bench_segs)
+        assert len(aligned) == 3
+        for p_seg, b_seg in aligned:
+            assert b_seg is not None
+            assert p_seg["position"] == b_seg.position
+
+    def test_align_segments_mismatch(self):
+        """玩家有 4 个段落，benchmark 只有 3 个，多余段落配对 None。"""
+        from src.tools.mplus_comparison import _align_segments
+
+        player_segs = [
+            {"position": 0, "segment_type": "trash", "name": "Trash #1"},
+            {"position": 1, "segment_type": "boss", "name": "Boss #1"},
+            {"position": 2, "segment_type": "trash", "name": "Trash #2"},
+            {"position": 3, "segment_type": "boss", "name": "Boss #2"},
+        ]
+        bench_segs = [
+            MplusBenchmarkSegment(position=0, segment_type="trash", segment_name="Trash #1"),
+            MplusBenchmarkSegment(position=1, segment_type="boss", segment_name="Boss #1"),
+            MplusBenchmarkSegment(position=2, segment_type="trash", segment_name="Trash #2"),
+        ]
+        aligned = _align_segments(player_segs, bench_segs)
+        assert len(aligned) == 4
+        # 前 3 个有 benchmark
+        for i in range(3):
+            assert aligned[i][1] is not None
+        # 第 4 个无 benchmark
+        assert aligned[3][1] is None
+
+    def test_build_summary_counts_flags(self):
+        """汇总正确统计 damage/CD/interrupt/death flag 数量。"""
+        from src.tools.mplus_comparison import _build_summary
+
+        seg_comps = [
+            SegmentComparison(
+                position=0, segment_type="trash", segment_name="Trash #1",
+                status="compared",
+                damage_gaps=[
+                    SegmentDamageGap(spell_name="A", spell_id=1, flagged=True),
+                    SegmentDamageGap(spell_name="B", spell_id=2, flagged=False),
+                ],
+                cd_gaps=[
+                    {"spell_id": 10, "flagged": True},
+                    {"spell_id": 11, "flagged": True},
+                ],
+                interrupt_comparison={"count_flagged": True},
+            ),
+            SegmentComparison(
+                position=2, segment_type="trash", segment_name="Trash #2",
+                status="compared",
+                damage_gaps=[
+                    SegmentDamageGap(spell_name="C", spell_id=3, flagged=True),
+                ],
+                cd_gaps=[],
+                interrupt_comparison={"count_flagged": False},
+            ),
+        ]
+        summary = _build_summary(seg_comps, [], [DeathBreakdown(), DeathBreakdown()], {})
+        assert summary["total_damage_flags"] == 2  # A + C
+        assert summary["total_cd_flags"] == 2  # 10 + 11
+        assert summary["total_deaths"] == 2
+        assert summary["total_interrupt_flags"] == 1
+        # worst segment: Trash #1 有 4 flags，Trash #2 有 1 flag
+        assert len(summary["worst_segments"]) == 2
+        assert summary["worst_segments"][0]["name"] == "Trash #1"
+
+    def test_segment_comparison_no_benchmark(self):
+        """无 benchmark 的段落标记 status="no_benchmark"。"""
+        from src.tools.mplus_comparison import _build_segment_comparison
+
+        player_data = {
+            "position": 5,
+            "segment_type": "trash",
+            "name": "Trash #3",
+            "damage_breakdown": [],
+            "cd_casts": [],
+            "interrupt_count": 0,
+            "interrupt_target_ids": set(),
+        }
+        result = _build_segment_comparison(player_data, None)
+        assert isinstance(result, SegmentComparison)
+        assert result.status == "no_benchmark"
+        assert result.damage_gaps == []
+        assert result.cd_gaps == []
