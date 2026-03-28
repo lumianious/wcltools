@@ -25,7 +25,7 @@
 - [x] **Phase 8: M+ API Foundation** - Verify WCL M+ API parameters, add difficulty support, models, caching
 - [x] **Phase 9: M+ Benchmark Aggregation** - Build cached benchmark bundle from top M+ players per dungeon
 - [x] **Phase 10: M+ Comparison Engine** - Per-segment comparison, boss analysis, death analysis, interrupt comparison (completed 2026-03-28)
-- [ ] **Phase 11: M+ Coaching Tool** - Orchestrate all data into structured coaching output with actionable advice
+- [x] **Phase 11: M+ Coaching Tool** - Orchestrate all data into structured coaching output with actionable advice (completed 2026-03-28)
 
 ## Phase Details
 
@@ -89,7 +89,7 @@ Plans:
 
 Plans:
 - [x] 11-01-PLAN.md — Coaching Pydantic models, transformation logic, and unit tests (COACH-01, COACH-02, COACH-03)
-- [ ] 11-02-PLAN.md — MCP tool registration, documentation updates
+- [x] 11-02-PLAN.md — MCP tool registration, documentation updates
 
 ## Progress
 
@@ -102,4 +102,4 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11
 | 8. M+ API Foundation | v2.0 | 2/2 | Complete | 2026-03-28 |
 | 9. M+ Benchmark Aggregation | v2.0 | 0/3 | Not started | - |
 | 10. M+ Comparison Engine | v2.0 | 3/3 | Complete    | 2026-03-28 |
-| 11. M+ Coaching Tool | v2.0 | 1/2 | In Progress|  |
+| 11. M+ Coaching Tool | v2.0 | 2/2 | Complete   | 2026-03-28 |
