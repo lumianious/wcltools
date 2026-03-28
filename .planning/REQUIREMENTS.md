@@ -22,7 +22,7 @@ Requirements for M+ Coaching Intelligence milestone. Each maps to roadmap phases
 ### Damage Profile
 
 - [x] **DMG-01**: Agent can retrieve per-trash-segment spell damage % distribution from top players
-- [ ] **DMG-02**: Agent can compare player's spell damage % per trash segment against benchmark
+- [x] **DMG-02**: Agent can compare player's spell damage % per trash segment against benchmark
 
 ### Boss Analysis
 
@@ -37,7 +37,7 @@ Requirements for M+ Coaching Intelligence milestone. Each maps to roadmap phases
 ### Interrupts
 
 - [x] **INT-01**: Agent can retrieve interrupt cast counts and targets from top M+ players per dungeon
-- [ ] **INT-02**: Agent can compare player's interrupt usage against benchmark (count, critical kicks missed)
+- [x] **INT-02**: Agent can compare player's interrupt usage against benchmark (count, critical kicks missed)
 
 ### Coaching
 
@@ -84,13 +84,13 @@ Deferred to future release.
 | CD-01 | Phase 9 | Complete |
 | CD-02 | Phase 9 | Complete |
 | DMG-01 | Phase 9 | Complete |
-| DMG-02 | Phase 10 | Pending |
+| DMG-02 | Phase 10 | Complete |
 | BOSS-01 | Phase 10 | Pending |
 | BOSS-02 | Phase 10 | Pending |
 | SURV-01 | Phase 9 | Complete |
 | SURV-02 | Phase 10 | Pending |
 | INT-01 | Phase 9 | Complete |
-| INT-02 | Phase 10 | Pending |
+| INT-02 | Phase 10 | Complete |
 | COACH-01 | Phase 11 | Pending |
 | COACH-02 | Phase 11 | Pending |
 | COACH-03 | Phase 11 | Pending |
