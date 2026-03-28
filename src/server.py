@@ -2,7 +2,7 @@
 WoW 团本 / 大秘境教练 MCP 服务器 — 入口模块。
 
 传输协议: stdio（stdout 专用于 JSON-RPC，日志全部走 stderr）
-工具注册: get_encounters, get_top_builds, get_spec_info, get_cooldown_timelines, get_rotation_profile, get_defensive_patterns, get_example_logs, analyze_player_log, analyze_dungeon_run, get_cast_sequence, get_buff_timeline, get_resource_timeline, get_boss_cast_timeline, get_coaching_context
+工具注册: get_encounters, get_top_builds, get_spec_info, get_cooldown_timelines, get_rotation_profile, get_defensive_patterns, get_example_logs, analyze_player_log, analyze_dungeon_run, get_mplus_benchmarks, get_cast_sequence, get_buff_timeline, get_resource_timeline, get_boss_cast_timeline, get_coaching_context
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
 """
@@ -39,6 +39,7 @@ from src.tools.buff_timeline import get_buff_timeline as _get_buff_timeline
 from src.tools.resource_timeline import get_resource_timeline as _get_resource_timeline
 from src.tools.boss_timeline import get_boss_cast_timeline as _get_boss_cast_timeline
 from src.tools.dungeon_analysis import analyze_dungeon_run as _analyze_dungeon_run
+from src.tools.mplus_benchmarks import get_mplus_benchmarks as _get_mplus_benchmarks
 from src.wcl_client import WCLClient
 
 # ============================================================
@@ -410,6 +411,40 @@ async def analyze_dungeon_run(
         fight=fight,
         include_casts=include_casts,
     )
+    return result.model_dump()
+
+
+# ============================================================
+# 工具: get_mplus_benchmarks
+# ============================================================
+
+
+@mcp.tool()
+async def get_mplus_benchmarks(
+    spec: str,
+    encounter_id: int,
+    key_level: int,
+) -> dict:
+    """
+    Get aggregated M+ benchmark data from top players for a dungeon.
+
+    Returns per-segment benchmarks (damage breakdown, major CD usage,
+    defensive patterns, interrupt counts) from top 5 players at the
+    specified key level. Segments are boss-bounded (trash between bosses
+    is merged). Use this to understand what top players do in each part
+    of the dungeon. Cost: ~25-35 WCL points (5 reports x 5-7 queries).
+
+    Args:
+        spec: Class specialization slug (e.g., "balance-druid")
+        encounter_id: Dungeon encounter ID from get_encounters
+        key_level: Mythic+ keystone level to benchmark (e.g., 10, 12)
+
+    Returns:
+        Benchmark bundle with segments (damage, CDs, defensives, interrupts)
+        and CD spacing pattern across the full dungeon.
+    """
+    client = _get_wcl_client()
+    result = await _get_mplus_benchmarks(client, spec, encounter_id, key_level)
     return result.model_dump()
 
 

@@ -26,7 +26,7 @@
 | `spec_info.py` | `get_spec_info` 工具 — 专精信息 | `get_spec_info` |
 | `timelines.py` | `get_cooldown_timelines` 工具 — CD 技能时间线 | `get_cooldown_timelines` |
 | `mplus_rankings.py` | M+ 排行榜查询 — bracket 过滤、稀疏回退、缓存 | `query_mplus_rankings` |
-| `mplus_benchmarks.py` | M+ 基准数据提取 — 段落对齐、伤害/CD/打断提取、单报告编排 | `_build_segment_positions`, `_extract_segment_damage`, `_extract_segment_cds`, `_count_segment_interrupts`, `_compute_cd_spacing`, `_fetch_report_benchmark_data` |
+| `mplus_benchmarks.py` | M+ 基准聚合 — 从顶尖玩家报告提取分段基准数据 | `get_mplus_benchmarks` |
 
 ## 模块依赖
 
