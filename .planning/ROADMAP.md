@@ -100,5 +100,5 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11
 | 1-7 | v1.0 | 7/7 | Complete | shipped |
 | 8. M+ API Foundation | v2.0 | 2/2 | Complete | 2026-03-28 |
 | 9. M+ Benchmark Aggregation | v2.0 | 0/3 | Not started | - |
-| 10. M+ Comparison Engine | v2.0 | 3/3 | Complete   | 2026-03-28 |
+| 10. M+ Comparison Engine | v2.0 | 3/3 | Complete    | 2026-03-28 |
 | 11. M+ Coaching Tool | v2.0 | 0/? | Not started | - |
