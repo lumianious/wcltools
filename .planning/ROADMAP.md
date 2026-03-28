@@ -41,8 +41,8 @@
 **Plans**: 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Verify WCL M+ API parameters live (difficulty=10, bracket, encounter IDs, keystone fields)
-- [ ] 08-02-PLAN.md — Add mythic_plus difficulty, Pydantic models, keystone fields, M+ rankings query with cache
+- [x] 08-01-PLAN.md — Verify WCL M+ API parameters live (difficulty=10, bracket, encounter IDs, keystone fields)
+- [x] 08-02-PLAN.md — Add mythic_plus difficulty, Pydantic models, keystone fields, M+ rankings query with cache
 
 ### Phase 9: M+ Benchmark Aggregation
 **Goal**: Agent can retrieve comprehensive benchmark data from top M+ players for any dungeon segment
