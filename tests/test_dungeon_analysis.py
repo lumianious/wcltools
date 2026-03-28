@@ -16,19 +16,43 @@ from tests.conftest import MockWCLClient
 # 共享 mock 数据
 # ============================================================
 
-# 5 个战斗段落: 2 boss + 3 trash (+ fight id 0 全局聚合)
+# 单副本: 5 个战斗段落: 2 boss + 3 trash (+ fight id 0 全局聚合)
+# 所有 fight 共享同一个 gameZone
+_ZONE_A = {"id": 100, "name": "Test Dungeon"}
 MOCK_FIGHTS_RESPONSE = {
     "reportData": {
         "report": {
             "fights": [
-                {"id": 0, "startTime": 0, "endTime": 600000, "kill": True, "encounterID": 0, "name": "All"},
-                {"id": 1, "startTime": 0, "endTime": 60000, "kill": True, "encounterID": 0, "name": "Trash 1"},
-                {"id": 2, "startTime": 65000, "endTime": 165000, "kill": True, "encounterID": 12345, "name": "Boss A"},
-                {"id": 3, "startTime": 170000, "endTime": 230000, "kill": True, "encounterID": 0, "name": "Trash 2"},
-                {"id": 4, "startTime": 240000, "endTime": 340000, "kill": True, "encounterID": 67890, "name": "Boss B"},
-                {"id": 5, "startTime": 350000, "endTime": 400000, "kill": True, "encounterID": 0, "name": "Trash 3"},
+                {"id": 0, "startTime": 0, "endTime": 600000, "kill": True, "encounterID": 0, "name": "All", "gameZone": _ZONE_A},
+                {"id": 1, "startTime": 0, "endTime": 60000, "kill": True, "encounterID": 0, "name": "Trash 1", "gameZone": _ZONE_A},
+                {"id": 2, "startTime": 65000, "endTime": 165000, "kill": True, "encounterID": 0, "name": "Boss A", "gameZone": _ZONE_A},
+                {"id": 3, "startTime": 170000, "endTime": 230000, "kill": True, "encounterID": 0, "name": "Trash 2", "gameZone": _ZONE_A},
+                {"id": 4, "startTime": 240000, "endTime": 340000, "kill": True, "encounterID": 0, "name": "Boss B", "gameZone": _ZONE_A},
+                {"id": 5, "startTime": 350000, "endTime": 400000, "kill": True, "encounterID": 0, "name": "Trash 3", "gameZone": _ZONE_A},
             ],
             "title": "Test Dungeon",
+        }
+    }
+}
+
+# 多副本 report: 2 个不同的副本 run
+_ZONE_B = {"id": 200, "name": "Pit of Saron"}
+_ZONE_C = {"id": 300, "name": "Magisters' Terrace"}
+MOCK_MULTI_DUNGEON_RESPONSE = {
+    "reportData": {
+        "report": {
+            "fights": [
+                {"id": 0, "startTime": 0, "endTime": 9999999, "kill": True, "encounterID": 0, "name": "All", "gameZone": None},
+                # Pit of Saron (zone 200): fights 1-3
+                {"id": 1, "startTime": 0, "endTime": 60000, "kill": True, "encounterID": 0, "name": "Ymirjar Graveblade", "gameZone": _ZONE_B},
+                {"id": 2, "startTime": 70000, "endTime": 170000, "kill": True, "encounterID": 0, "name": "Forgemaster Garfrost", "gameZone": _ZONE_B},
+                {"id": 3, "startTime": 180000, "endTime": 280000, "kill": True, "encounterID": 0, "name": "Ick / Krick", "gameZone": _ZONE_B},
+                # Magisters' Terrace (zone 300): fights 4-6
+                {"id": 4, "startTime": 500000, "endTime": 560000, "kill": True, "encounterID": 0, "name": "Seranel Sunlash", "gameZone": _ZONE_C},
+                {"id": 5, "startTime": 570000, "endTime": 670000, "kill": True, "encounterID": 0, "name": "Gemellus", "gameZone": _ZONE_C},
+                {"id": 6, "startTime": 680000, "endTime": 780000, "kill": True, "encounterID": 12811, "name": "Magisters' Terrace", "gameZone": _ZONE_C},
+            ],
+            "title": "Mythic+ Session",
         }
     }
 }
@@ -192,15 +216,16 @@ async def test_query_all_fights_returns_fight_list():
 
 
 def test_classify_segments_separates_boss_and_trash():
-    """_classify_segments 应区分 boss 和 trash 段落，过滤 fight id 0。"""
+    """_classify_segments 应区分 boss 和 trash 段落。"""
     from src.tools.dungeon_analysis import _classify_segments
 
+    # 单副本 mock 中所有段落都是 encounterID=0（M+ 正常情况）
     fights = MOCK_FIGHTS_RESPONSE["reportData"]["report"]["fights"]
-    bosses, trash = _classify_segments(fights)
-    assert len(bosses) == 2
-    assert len(trash) == 3
-    assert all(b["encounterID"] > 0 for b in bosses)
-    assert all(t["encounterID"] == 0 for t in trash)
+    # 过滤掉 fight id 0（全局聚合），模拟 _get_run_fights 输出
+    filtered = [f for f in fights if f.get("id", 0) != 0]
+    bosses, trash = _classify_segments(filtered)
+    assert len(bosses) == 0  # M+ 段落通常 encounterID=0
+    assert len(trash) == 5
 
 
 # ============================================================
@@ -239,7 +264,7 @@ async def test_analyze_dungeon_run_aggregate_dps():
 
 @pytest.mark.asyncio
 async def test_analyze_dungeon_run_segments():
-    """segments 应包含每场战斗的分解数据（boss/trash 区分）。"""
+    """segments 应包含每场战斗的分解数据。"""
     from src.tools.dungeon_analysis import analyze_dungeon_run
 
     client = _setup_mock_client()
@@ -250,10 +275,8 @@ async def test_analyze_dungeon_run_segments():
 
     # 5 segments (fight ids 1-5, excluding id 0)
     assert len(result.segments) == 5
-    boss_segs = [s for s in result.segments if s.is_boss]
-    trash_segs = [s for s in result.segments if not s.is_boss]
-    assert len(boss_segs) == 2
-    assert len(trash_segs) == 3
+    # 单副本 mock 中所有段落都是 encounterID=0（M+ trash/boss pull）
+    assert all(not s.is_boss for s in result.segments)
 
 
 # ============================================================
@@ -297,6 +320,124 @@ async def test_analyze_dungeon_run_with_casts():
 
 # ============================================================
 # Test 7: 模型序列化
+# ============================================================
+
+
+# ============================================================
+# Test 8: _group_fights_by_dungeon 分组
+# ============================================================
+
+
+def test_group_fights_by_dungeon():
+    """_group_fights_by_dungeon 按 gameZone 分组，跳过 fight id 0。"""
+    from src.tools.dungeon_analysis import _group_fights_by_dungeon
+
+    fights = MOCK_MULTI_DUNGEON_RESPONSE["reportData"]["report"]["fights"]
+    runs = _group_fights_by_dungeon(fights)
+
+    assert len(runs) == 2
+    # 按时间排序: Pit of Saron 先，Magisters' Terrace 后
+    assert runs[0].zone_name == "Pit of Saron"
+    assert runs[1].zone_name == "Magisters' Terrace"
+    assert len(runs[0].segment_fights) == 3
+    # Magisters': 2 segment + 1 aggregate (encounterID=12811)
+    assert len(runs[1].segment_fights) == 2
+    assert runs[1].aggregate_fight is not None
+    assert runs[1].aggregate_fight["encounterID"] == 12811
+
+
+# ============================================================
+# Test 9: _select_dungeon_run 选择逻辑
+# ============================================================
+
+
+def test_select_dungeon_run_last():
+    """fight='last' 应选择最后一个副本。"""
+    from src.tools.dungeon_analysis import _group_fights_by_dungeon, _select_dungeon_run
+
+    fights = MOCK_MULTI_DUNGEON_RESPONSE["reportData"]["report"]["fights"]
+    runs = _group_fights_by_dungeon(fights)
+
+    selected = _select_dungeon_run(runs, "last")
+    assert selected.zone_name == "Magisters' Terrace"
+
+
+def test_select_dungeon_run_by_index():
+    """fight='1' 应选择第一个副本。"""
+    from src.tools.dungeon_analysis import _group_fights_by_dungeon, _select_dungeon_run
+
+    fights = MOCK_MULTI_DUNGEON_RESPONSE["reportData"]["report"]["fights"]
+    runs = _group_fights_by_dungeon(fights)
+
+    selected = _select_dungeon_run(runs, "1")
+    assert selected.zone_name == "Pit of Saron"
+
+
+def test_select_dungeon_run_by_name():
+    """fight='magisters' 应模糊匹配到 Magisters' Terrace。"""
+    from src.tools.dungeon_analysis import _group_fights_by_dungeon, _select_dungeon_run
+
+    fights = MOCK_MULTI_DUNGEON_RESPONSE["reportData"]["report"]["fights"]
+    runs = _group_fights_by_dungeon(fights)
+
+    selected = _select_dungeon_run(runs, "magisters")
+    assert selected.zone_name == "Magisters' Terrace"
+
+
+def test_select_dungeon_run_invalid_index():
+    """无效索引应抛出 ValueError。"""
+    from src.tools.dungeon_analysis import _group_fights_by_dungeon, _select_dungeon_run
+
+    fights = MOCK_MULTI_DUNGEON_RESPONSE["reportData"]["report"]["fights"]
+    runs = _group_fights_by_dungeon(fights)
+
+    with pytest.raises(ValueError, match="超出范围"):
+        _select_dungeon_run(runs, "99")
+
+
+def test_select_dungeon_run_no_match():
+    """无匹配名称应抛出 ValueError。"""
+    from src.tools.dungeon_analysis import _group_fights_by_dungeon, _select_dungeon_run
+
+    fights = MOCK_MULTI_DUNGEON_RESPONSE["reportData"]["report"]["fights"]
+    runs = _group_fights_by_dungeon(fights)
+
+    with pytest.raises(ValueError, match="未找到匹配"):
+        _select_dungeon_run(runs, "nonexistent")
+
+
+# ============================================================
+# Test 10: 多副本 report 完整分析（选择特定副本）
+# ============================================================
+
+
+@pytest.mark.asyncio
+async def test_analyze_multi_dungeon_selects_correct_run():
+    """多副本 report 中 fight='1' 应只分析第一个副本的段落。"""
+    from src.tools.dungeon_analysis import analyze_dungeon_run
+
+    client = MockWCLClient()
+    client.set_response("fights {", MOCK_MULTI_DUNGEON_RESPONSE)
+    client.set_response("masterData", MOCK_MASTER_DATA_RESPONSE)
+    client.set_response("DamageDone", MOCK_DAMAGE_TABLE_RESPONSE)
+    client.set_response("Buffs", MOCK_BUFF_TABLE_RESPONSE)
+    client.set_response("CombatantInfo", MOCK_COMBATANT_RESPONSE)
+    client.set_response("Deaths", MOCK_DEATH_RESPONSE)
+
+    result = await analyze_dungeon_run(
+        client, report="MULTIREPORT", player="TestPlayer",
+        spec="frost-mage", fight="1",
+    )
+
+    assert result.dungeon_name == "Pit of Saron"
+    # Pit of Saron 有 3 个段落 (fights 1-3)
+    assert len(result.segments) == 3
+    # active_time = (60 + 100 + 100) = 260 sec
+    assert abs(result.active_time_sec - 260.0) < 0.1
+
+
+# ============================================================
+# Test 11: 模型序列化
 # ============================================================
 
 

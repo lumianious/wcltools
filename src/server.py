@@ -374,15 +374,22 @@ async def analyze_dungeon_run(
     report: str,
     player: str,
     spec: str,
+    fight: str = "last",
     include_casts: bool = False,
 ) -> dict:
     """
     Analyze a player's performance across an entire M+ dungeon run.
 
     Aggregates damage, deaths, buff uptimes, and optionally cast data
-    across all fight segments (bosses + trash) in the report. Returns
-    overall DPS (using active fight time, not wall-clock), per-segment
-    breakdown, and top improvement areas.
+    across all fight segments (bosses + trash) in a single dungeon run.
+    Returns overall DPS (using active fight time, not wall-clock),
+    per-segment breakdown, and top improvement areas.
+
+    A WCL report may contain multiple dungeon runs. Use the fight parameter
+    to select which run to analyze:
+    - "last" (default): the most recent dungeon run
+    - "1", "2", etc: the Nth run in chronological order
+    - dungeon name (fuzzy): e.g. "Magisters" or "Pit of Saron"
 
     Accepts a report code or full WCL URL. Default cost: ~5-7 WCL points.
     With include_casts=True: +30-100 points (full cast pagination).
@@ -391,6 +398,7 @@ async def analyze_dungeon_run(
         report: WCL report code or full URL
         player: Character name (case-insensitive)
         spec: Class spec slug, e.g. "balance-druid", "frost-death-knight"
+        fight: Which dungeon run to analyze — "last", index, or name match
         include_casts: Enable full cast analysis (expensive, default false)
     """
     client = _get_wcl_client()
@@ -399,6 +407,7 @@ async def analyze_dungeon_run(
         report=report,
         player=player,
         spec=spec,
+        fight=fight,
         include_casts=include_casts,
     )
     return result.model_dump()

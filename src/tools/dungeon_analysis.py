@@ -4,11 +4,14 @@ analyze_dungeon_run 工具 — M+ 副本整体分析。
 聚合一个 M+ 副本中所有战斗段落的伤害、死亡、Buff 覆盖率，
 可选查询施法数据，产出副本级别的分析响应。
 
+支持多副本 report: 通过 gameZone 分组识别不同副本 run，
+fight 参数控制分析哪个副本（默认 "last"）。
+
 WCL 数据流:
-  1. report.fights (无 fightIDs) -> 所有段落列表
+  1. report.fights (含 gameZone) -> 按副本分组
   2. report.masterData -> actors + ability name map -> sourceID
-  3. report.table(DamageDone, 全时段) -> 聚合伤害 + 技能排行
-  4. report.table(Buffs, 全时段) -> Buff 覆盖率
+  3. report.table(DamageDone, 选定时段) -> 聚合伤害 + 技能排行
+  4. report.table(Buffs, 选定时段) -> Buff 覆盖率
   5. report.events(CombatantInfo) -> 天赋/装备快照
   6. report.events(Deaths) -> 死亡事件
   7. (可选) report.events(Casts) -> 施法事件（include_casts=True）
@@ -69,7 +72,7 @@ async def _query_all_fights(
     client: WCLClient, report_code: str
 ) -> tuple[list[dict], str]:
     """
-    查询报告中所有战斗段落（不传 fightIDs）。
+    查询报告中所有战斗段落（不传 fightIDs），含 gameZone 信息。
 
     Returns:
         (fights_list, report_title)
@@ -84,6 +87,7 @@ async def _query_all_fights(
                     kill
                     encounterID
                     name
+                    gameZone {{ id name }}
                 }}
                 title
             }}
@@ -97,6 +101,134 @@ async def _query_all_fights(
 
 
 # ============================================================
+# 副本 run 分组: 按 gameZone 识别不同副本
+# ============================================================
+
+
+class DungeonRun:
+    """报告中的一个副本 run（按 gameZone 分组）。"""
+
+    def __init__(self, zone_id: int, zone_name: str) -> None:
+        self.zone_id = zone_id
+        self.zone_name = zone_name
+        self.segment_fights: list[dict] = []  # encounterID == 0 的子段落
+        self.aggregate_fight: dict | None = None  # encounterID > 0 的副本级聚合
+
+
+def _group_fights_by_dungeon(fights: list[dict]) -> list[DungeonRun]:
+    """
+    按 gameZone 将战斗分组为独立的副本 run。
+
+    WCL M+ 报告结构:
+    - 每个副本 run 的所有 fight 共享同一个 gameZone
+    - 部分已完成的 run 有一个 encounterID > 0 的聚合 fight（整个副本作为一场）
+    - 段落 fight (encounterID == 0) 是单独的 trash/boss pull
+
+    Returns:
+        按最早 fight startTime 排序的 DungeonRun 列表
+    """
+    runs_by_zone: dict[int, DungeonRun] = {}
+
+    for f in fights:
+        if f.get("id", 0) == 0:
+            continue  # 跳过全局聚合 fight
+
+        gz = f.get("gameZone") or {}
+        zone_id = gz.get("id", 0)
+        zone_name = gz.get("name", "Unknown")
+
+        if zone_id not in runs_by_zone:
+            runs_by_zone[zone_id] = DungeonRun(zone_id, zone_name)
+
+        run = runs_by_zone[zone_id]
+        if f.get("encounterID", 0) > 0:
+            run.aggregate_fight = f
+        else:
+            run.segment_fights.append(f)
+
+    # 按最早 fight 的 startTime 排序
+    runs = list(runs_by_zone.values())
+    for run in runs:
+        run.segment_fights.sort(key=lambda f: f["startTime"])
+    runs.sort(key=lambda r: _run_start_time(r))
+    return runs
+
+
+def _run_start_time(run: DungeonRun) -> int:
+    """获取 run 最早的 startTime。"""
+    times = [f["startTime"] for f in run.segment_fights]
+    if run.aggregate_fight:
+        times.append(run.aggregate_fight["startTime"])
+    return min(times) if times else 0
+
+
+def _select_dungeon_run(
+    runs: list[DungeonRun], fight: str
+) -> DungeonRun:
+    """
+    根据 fight 参数选择一个副本 run。
+
+    Args:
+        runs: 已按时间排序的 DungeonRun 列表
+        fight: 选择模式:
+            - "last": 最后一个 run（默认）
+            - "1", "2", ...: 第 N 个 run（1-based）
+            - 其他字符串: 按副本名模糊匹配
+
+    Returns:
+        选中的 DungeonRun
+
+    Raises:
+        ValueError: 无匹配 run 或索引越界
+    """
+    if not runs:
+        raise ValueError("报告中未找到任何副本 run")
+
+    # "last" — 最后一个
+    if fight == "last":
+        return runs[-1]
+
+    # 数字索引 (1-based)
+    if fight.isdigit():
+        idx = int(fight) - 1
+        if 0 <= idx < len(runs):
+            return runs[idx]
+        raise ValueError(
+            f"副本索引 {fight} 超出范围，报告中共有 {len(runs)} 个副本: "
+            + ", ".join(f"{i+1}. {r.zone_name}" for i, r in enumerate(runs))
+        )
+
+    # 名称模糊匹配
+    fight_lower = fight.lower()
+    matches = [r for r in runs if fight_lower in r.zone_name.lower()]
+    if len(matches) == 1:
+        return matches[0]
+    if len(matches) > 1:
+        raise ValueError(
+            f"'{fight}' 匹配到多个副本: "
+            + ", ".join(r.zone_name for r in matches)
+        )
+    raise ValueError(
+        f"未找到匹配 '{fight}' 的副本，可选: "
+        + ", ".join(f"{i+1}. {r.zone_name}" for i, r in enumerate(runs))
+    )
+
+
+def _get_run_fights(run: DungeonRun) -> list[dict]:
+    """
+    获取 run 的有效分析 fight 列表。
+
+    优先使用 segment_fights（独立段落），
+    如果没有段落则退回到 aggregate_fight。
+    """
+    if run.segment_fights:
+        return run.segment_fights
+    if run.aggregate_fight:
+        return [run.aggregate_fight]
+    return []
+
+
+# ============================================================
 # 段落分类: boss vs trash
 # ============================================================
 
@@ -105,7 +237,9 @@ def _classify_segments(
     fights: list[dict],
 ) -> tuple[list[dict], list[dict]]:
     """
-    将战斗列表分为 boss 和 trash 段落，过滤掉 fight id 0（全局聚合）。
+    将战斗列表分为 boss 和 trash 段落。
+
+    注意: 输入应已经过滤（不含 fight id 0 和副本级聚合 fight）。
 
     Returns:
         (boss_fights, trash_fights)
@@ -113,8 +247,6 @@ def _classify_segments(
     bosses: list[dict] = []
     trash: list[dict] = []
     for f in fights:
-        if f.get("id", 0) == 0:
-            continue
         if f.get("encounterID", 0) > 0:
             bosses.append(f)
         else:
@@ -182,6 +314,7 @@ async def analyze_dungeon_run(
     report: str,
     player: str,
     spec: str,
+    fight: str = "last",
     include_casts: bool = False,
 ) -> DungeonRunAnalysisResponse:
     """
@@ -192,6 +325,10 @@ async def analyze_dungeon_run(
         report: Report code 或完整 WCL URL
         player: 角色名（大小写不敏感）
         spec: 专精 slug，如 "frost-mage"
+        fight: 选择分析哪个副本 run:
+            - "last"（默认）: 最后一个副本
+            - "1", "2", ...: 第 N 个副本（按时间顺序）
+            - 副本名（模糊匹配）: 如 "Magisters" 或 "Pit of Saron"
         include_casts: 是否查询完整施法数据（默认 False，节省 API 点数）
 
     Returns:
@@ -199,8 +336,8 @@ async def analyze_dungeon_run(
     """
     report_code = extract_report_code(report)
     logger.info(
-        "analyze_dungeon_run: %s in %s spec=%s include_casts=%s",
-        player, report_code, spec, include_casts,
+        "analyze_dungeon_run: %s in %s spec=%s fight=%s include_casts=%s",
+        player, report_code, spec, fight, include_casts,
     )
 
     # ---- Step 1: 并行查询战斗列表 + masterData ----
@@ -213,12 +350,24 @@ async def analyze_dungeon_run(
     if source_id is None:
         raise ValueError(f"未找到玩家 '{player}' in report {report_code}")
 
-    # ---- Step 2: 分类段落，计算时间范围 ----
-    real_fights = [f for f in fights if f.get("id", 0) != 0]
-    if not real_fights:
-        raise ValueError(f"报告 {report_code} 中无有效战斗段落")
+    # ---- Step 2: 按 gameZone 分组，选择目标副本 ----
+    all_runs = _group_fights_by_dungeon(fights)
+    if not all_runs:
+        raise ValueError(f"报告 {report_code} 中未找到任何副本 run")
 
-    bosses, trash = _classify_segments(fights)
+    selected_run = _select_dungeon_run(all_runs, fight)
+    real_fights = _get_run_fights(selected_run)
+    dungeon_name = selected_run.zone_name
+
+    logger.info(
+        "选中副本: %s (%d 个段落, 共 %d 个副本可选)",
+        dungeon_name, len(real_fights), len(all_runs),
+    )
+
+    if not real_fights:
+        raise ValueError(f"副本 '{dungeon_name}' 中无有效战斗段落")
+
+    bosses, trash = _classify_segments(real_fights)
 
     first_start = min(f["startTime"] for f in real_fights)
     last_end = max(f["endTime"] for f in real_fights)
@@ -362,7 +511,7 @@ async def analyze_dungeon_run(
         report_code=report_code,
         player_name=player,
         spec=spec,
-        dungeon_name=dungeon_title,
+        dungeon_name=dungeon_name,
         total_duration_sec=round(total_duration_sec, 1),
         active_time_sec=round(active_time_sec, 1),
         total_dps=total_dps,
