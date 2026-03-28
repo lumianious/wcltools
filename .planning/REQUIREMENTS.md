@@ -47,7 +47,7 @@ Requirements for M+ Coaching Intelligence milestone. Each maps to roadmap phases
 
 ## Design Decisions
 
-- **Trash segments defined by boss boundaries:** [before boss1] → Boss1 → [boss1→boss2] → Boss2 → etc. This sidesteps route-matching problems.
+- **Trash segments defined by boss boundaries:** [before boss1] -> Boss1 -> [boss1->boss2] -> Boss2 -> etc. This sidesteps route-matching problems.
 - **Trash = aggregate analysis:** Spell damage %, major CD placement, defensive usage. Not cast-by-cast.
 - **Boss = cast-by-cast analysis:** Reuse raid-style APL/rotation analysis from existing tools.
 - **Benchmark source:** WCL M+ leaderboard filtered by dungeon+spec+key level (e.g., top +10 Balance Druids in Magisters' Terrace).
@@ -77,29 +77,29 @@ Deferred to future release.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BENCH-01 | — | Pending |
-| BENCH-02 | — | Pending |
-| BENCH-03 | — | Pending |
-| BENCH-04 | — | Pending |
-| CD-01 | — | Pending |
-| CD-02 | — | Pending |
-| DMG-01 | — | Pending |
-| DMG-02 | — | Pending |
-| BOSS-01 | — | Pending |
-| BOSS-02 | — | Pending |
-| SURV-01 | — | Pending |
-| SURV-02 | — | Pending |
-| INT-01 | — | Pending |
-| INT-02 | — | Pending |
-| COACH-01 | — | Pending |
-| COACH-02 | — | Pending |
-| COACH-03 | — | Pending |
+| BENCH-01 | Phase 8 | Pending |
+| BENCH-02 | Phase 9 | Pending |
+| BENCH-03 | Phase 9 | Pending |
+| BENCH-04 | Phase 8 | Pending |
+| CD-01 | Phase 9 | Pending |
+| CD-02 | Phase 9 | Pending |
+| DMG-01 | Phase 9 | Pending |
+| DMG-02 | Phase 10 | Pending |
+| BOSS-01 | Phase 10 | Pending |
+| BOSS-02 | Phase 10 | Pending |
+| SURV-01 | Phase 9 | Pending |
+| SURV-02 | Phase 10 | Pending |
+| INT-01 | Phase 9 | Pending |
+| INT-02 | Phase 10 | Pending |
+| COACH-01 | Phase 11 | Pending |
+| COACH-02 | Phase 11 | Pending |
+| COACH-03 | Phase 11 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 17 total
-- Mapped to phases: 0 ⚠️
-- Unmapped: 17
+- Mapped to phases: 17/17
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-28*
-*Last updated: 2026-03-28 after initial definition*
+*Last updated: 2026-03-28 after roadmap creation*
