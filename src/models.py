@@ -7,6 +7,7 @@ Pydantic 数据模型 — WCL 数据结构定义。
   - get_cooldown_timelines (Phase 3): CastCluster, AbilityTimeline, CooldownTimelineResponse
   - get_rotation_profile (Phase 4): SpellStats, BuffUptime, RotationProfileResponse
   - analyze_player_log (Phase 5): SpellGap, CooldownIssue, DefensiveIssue, BuildDivergence, PlayerAnalysisResponse
+  - analyze_dungeon_run (Phase 8): FightSegmentSummary, DungeonRunAnalysisResponse
   - 通用: RateLimitInfo
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
