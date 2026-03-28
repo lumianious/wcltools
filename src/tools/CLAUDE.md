@@ -25,6 +25,7 @@
 | `rotation.py` | `get_rotation_profile` 工具 — 循环基准画像 | `get_rotation_profile` |
 | `spec_info.py` | `get_spec_info` 工具 — 专精信息 | `get_spec_info` |
 | `timelines.py` | `get_cooldown_timelines` 工具 — CD 技能时间线 | `get_cooldown_timelines` |
+| `mplus_rankings.py` | M+ 排行榜查询 — bracket 过滤、稀疏回退、缓存 | `query_mplus_rankings` |
 
 ## 模块依赖
 
@@ -37,6 +38,7 @@ cast_sequence.py → _wcl_helpers, rotation
 resource_timeline.py → _wcl_helpers, rotation
 boss_timeline.py → data (bosses.json)
 timelines.py → cache, data, builds
+mplus_rankings.py → cache, builds (SPEC_MAPPING), models (MplusRankingEntry, MplusBenchmarkMeta)
 ```
 
 ## 约定

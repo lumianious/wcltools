@@ -30,6 +30,7 @@
 | `test_resource_timeline.py` | 资源变化时间线 | Phase 7 |
 | `test_phase7.py` | Phase 7 综合集成测试 | Phase 7 |
 | `test_dungeon_analysis.py` | `analyze_dungeon_run` 工具 | Phase 8 |
+| `test_mplus_foundation.py` | M+ 基础设施（DIFFICULTY_MAP、模型、rankings 查询） | Phase 8 |
 
 ## 测试约定
 

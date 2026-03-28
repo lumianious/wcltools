@@ -50,6 +50,7 @@ DIFFICULTY_MAP: dict[str, int] = {
     "normal": 3,
     "heroic": 4,
     "mythic": 5,
+    "mythic_plus": 10,  # M+ / Challenge Mode
 }
 
 # 饰品在 gear 数组中的索引（0-based）
