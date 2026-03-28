@@ -578,6 +578,43 @@ CAST_EVENTS_PAGINATED_PAGE2 = {
 }
 
 
+# ----------------------------------------------------------
+# M+ 排行榜响应 — 用于 M+ 基准工具测试
+# bracketData = 钥石等级（非装等）
+# ----------------------------------------------------------
+MPLUS_RANKINGS_RESPONSE = {
+    "worldData": {
+        "encounter": {
+            "name": "Ara-Kara, City of Echoes",
+            "characterRankings": {
+                "count": 5000,
+                "hasMorePages": True,
+                "rankings": [
+                    {
+                        "name": "TestFrostMage",
+                        "class": "Mage",
+                        "spec": "Frost",
+                        "amount": 850000.5,
+                        "duration": 1920000,
+                        "bracketData": 12,
+                        "report": {"code": "abc123mplus", "fightID": 1},
+                    },
+                    {
+                        "name": "TestFireMage",
+                        "class": "Mage",
+                        "spec": "Fire",
+                        "amount": 820000.0,
+                        "duration": 1980000,
+                        "bracketData": 12,
+                        "report": {"code": "def456mplus", "fightID": 2},
+                    },
+                ],
+            },
+        }
+    }
+}
+
+
 def make_graphql_response(data: dict, rate_limit: dict | None = None) -> dict:
     """
     包装为 httpx 返回的原始 GraphQL 响应结构。

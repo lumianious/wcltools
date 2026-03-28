@@ -7,6 +7,7 @@ Pydantic 数据模型 — WCL 数据结构定义。
   - get_cooldown_timelines (Phase 3): CastCluster, AbilityTimeline, CooldownTimelineResponse
   - get_rotation_profile (Phase 4): SpellStats, BuffUptime, RotationProfileResponse
   - analyze_player_log (Phase 5): SpellGap, CooldownIssue, DefensiveIssue, BuildDivergence, PlayerAnalysisResponse
+  - M+ 基准数据 (Phase 8): MplusRankingEntry, MplusBenchmarkMeta
   - 通用: RateLimitInfo
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
@@ -634,3 +635,45 @@ class EclipseMetrics(BaseModel):
     avg_eclipse_gap_sec: float = 0.0
     ca_eclipse_coverage_pct: float = 0.0
     starlord_uptime_pct: float = 0.0
+
+
+# ============================================================
+# M+ 基准数据 (Phase 8)
+# ============================================================
+
+
+class MplusRankingEntry(BaseModel):
+    """M+ 排行榜单条记录 — 从 characterRankings 解析。"""
+
+    name: str
+    class_name: str = Field(default="", alias="class")
+    spec: str = ""
+    amount: float = Field(description="DPS 数值")
+    duration: int = Field(description="副本总时长（毫秒）")
+    report_code: str = ""
+    fight_id: int = 0
+    bracket_data: int = Field(
+        default=0,
+        alias="bracketData",
+        description="M+ 钥石等级（非装等）",
+    )
+
+    model_config = {"populate_by_name": True}
+
+
+class MplusBenchmarkMeta(BaseModel):
+    """M+ 基准元数据 — 记录基准构建参数。"""
+
+    encounter_id: int
+    encounter_name: str = ""
+    spec: str
+    key_level: int
+    actual_bracket: int = Field(
+        default=0,
+        description="实际使用的 bracket（fallback 时可能与 key_level 不同）",
+    )
+    sample_size: int = 0
+    median_dps: float = 0.0
+    dps_p25: float = 0.0
+    dps_p75: float = 0.0
+    cached_at: str = ""
