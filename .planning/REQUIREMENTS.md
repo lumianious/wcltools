@@ -11,7 +11,7 @@ Requirements for M+ Coaching Intelligence milestone. Each maps to roadmap phases
 
 - [x] **BENCH-01**: Agent can query WCL M+ leaderboard for top DPS players in a specific dungeon+spec+key level (e.g., top Balance Druids in +10 Magisters' Terrace)
 - [x] **BENCH-02**: From top player reports, agent can extract per-trash-segment (boss-bounded) spell damage % and major CD timing
-- [ ] **BENCH-03**: From top player reports, agent can extract cast-level data for boss encounters within the dungeon
+- [x] **BENCH-03**: From top player reports, agent can extract cast-level data for boss encounters within the dungeon
 - [x] **BENCH-04**: Benchmark data is cached per dungeon+spec+key level combination
 
 ### Cooldown Analysis
@@ -79,7 +79,7 @@ Deferred to future release.
 |-------------|-------|--------|
 | BENCH-01 | Phase 8 | Complete |
 | BENCH-02 | Phase 9 | Complete |
-| BENCH-03 | Phase 9 | Pending |
+| BENCH-03 | Phase 9 | Complete |
 | BENCH-04 | Phase 8 | Complete |
 | CD-01 | Phase 9 | Complete |
 | CD-02 | Phase 9 | Complete |

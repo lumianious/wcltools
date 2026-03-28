@@ -58,7 +58,7 @@ Plans:
 
 Plans:
 - [x] 09-01-PLAN.md — Pydantic models, test fixtures, and failing test scaffold for all 7 requirements
-- [ ] 09-02-PLAN.md — Core extraction functions: segment alignment, damage/CD/defensive/interrupt extraction
+- [x] 09-02-PLAN.md — Core extraction functions: segment alignment, damage/CD/defensive/interrupt extraction
 - [ ] 09-03-PLAN.md — Cross-player aggregation, caching, MCP tool registration, documentation
 
 ### Phase 10: M+ Comparison Engine
