@@ -10,18 +10,18 @@ Requirements for M+ Coaching Intelligence milestone. Each maps to roadmap phases
 ### Benchmarks
 
 - [x] **BENCH-01**: Agent can query WCL M+ leaderboard for top DPS players in a specific dungeon+spec+key level (e.g., top Balance Druids in +10 Magisters' Terrace)
-- [ ] **BENCH-02**: From top player reports, agent can extract per-trash-segment (boss-bounded) spell damage % and major CD timing
+- [x] **BENCH-02**: From top player reports, agent can extract per-trash-segment (boss-bounded) spell damage % and major CD timing
 - [ ] **BENCH-03**: From top player reports, agent can extract cast-level data for boss encounters within the dungeon
 - [x] **BENCH-04**: Benchmark data is cached per dungeon+spec+key level combination
 
 ### Cooldown Analysis
 
-- [ ] **CD-01**: Agent can retrieve major CD usage (offensive 1min/2min/3min, defensive, pots) from top players across boss-bounded trash segments
-- [ ] **CD-02**: Agent can show CD spacing pattern across the full dungeon — which trash segment gets which CDs
+- [x] **CD-01**: Agent can retrieve major CD usage (offensive 1min/2min/3min, defensive, pots) from top players across boss-bounded trash segments
+- [x] **CD-02**: Agent can show CD spacing pattern across the full dungeon — which trash segment gets which CDs
 
 ### Damage Profile
 
-- [ ] **DMG-01**: Agent can retrieve per-trash-segment spell damage % distribution from top players
+- [x] **DMG-01**: Agent can retrieve per-trash-segment spell damage % distribution from top players
 - [ ] **DMG-02**: Agent can compare player's spell damage % per trash segment against benchmark
 
 ### Boss Analysis
@@ -31,12 +31,12 @@ Requirements for M+ Coaching Intelligence milestone. Each maps to roadmap phases
 
 ### Survival
 
-- [ ] **SURV-01**: Agent can retrieve defensive CD usage patterns from top M+ players across boss-bounded segments
+- [x] **SURV-01**: Agent can retrieve defensive CD usage patterns from top M+ players across boss-bounded segments
 - [ ] **SURV-02**: Agent can analyze player deaths with damage-taken breakdown and defensive availability check
 
 ### Interrupts
 
-- [ ] **INT-01**: Agent can retrieve interrupt cast counts and targets from top M+ players per dungeon
+- [x] **INT-01**: Agent can retrieve interrupt cast counts and targets from top M+ players per dungeon
 - [ ] **INT-02**: Agent can compare player's interrupt usage against benchmark (count, critical kicks missed)
 
 ### Coaching
@@ -78,18 +78,18 @@ Deferred to future release.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | BENCH-01 | Phase 8 | Complete |
-| BENCH-02 | Phase 9 | Pending |
+| BENCH-02 | Phase 9 | Complete |
 | BENCH-03 | Phase 9 | Pending |
 | BENCH-04 | Phase 8 | Complete |
-| CD-01 | Phase 9 | Pending |
-| CD-02 | Phase 9 | Pending |
-| DMG-01 | Phase 9 | Pending |
+| CD-01 | Phase 9 | Complete |
+| CD-02 | Phase 9 | Complete |
+| DMG-01 | Phase 9 | Complete |
 | DMG-02 | Phase 10 | Pending |
 | BOSS-01 | Phase 10 | Pending |
 | BOSS-02 | Phase 10 | Pending |
-| SURV-01 | Phase 9 | Pending |
+| SURV-01 | Phase 9 | Complete |
 | SURV-02 | Phase 10 | Pending |
-| INT-01 | Phase 9 | Pending |
+| INT-01 | Phase 9 | Complete |
 | INT-02 | Phase 10 | Pending |
 | COACH-01 | Phase 11 | Pending |
 | COACH-02 | Phase 11 | Pending |
