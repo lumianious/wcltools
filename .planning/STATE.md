@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: M+ Coaching Intelligence
-status: verifying
-stopped_at: Completed 10-03-PLAN.md
-last_updated: "2026-03-28T16:58:06.273Z"
+status: executing
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-03-28T17:29:33.463Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 10
+  completed_plans: 9
   percent: 64
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Claude can tell a player exactly what to improve — backed by data from what top players actually do.
-**Current focus:** Phase 10 — m-comparison-engine
+**Current focus:** Phase 11 — m-coaching-tool
 
 ## Current Position
 
-Phase: 11
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 11 (m-coaching-tool) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-03-28
 
 Progress: [=========>..........] 64% (Phases 1-7 complete, 8-11 pending)
@@ -54,6 +54,7 @@ Progress: [=========>..........] 64% (Phases 1-7 complete, 8-11 pending)
 | Phase 10 P01 | 3min | 2 tasks | 5 files |
 | Phase 10 P02 | 3min | 2 tasks | 3 files |
 | Phase 10 P03 | 5min | 2 tasks | 5 files |
+| Phase 11 P01 | 3min | 1 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,7 @@ Recent decisions affecting current work:
 - [Phase 10]: Damage gap uses direct pct difference (bench_pct - player_pct); interrupt gap uses ratio via _compute_gap; bench-only spells flagged only if > 5%
 - [Phase 10]: Boss cast gap uses _compute_gap ratio (same 20% threshold); expected CD casts = 1 + floor((duration-1)/cd_seconds); defensive three-state classification
 - [Phase 10]: Boss benchmark comparison uses cd_casts from MplusBenchmarkSegment; interrupt summary aggregated across all trash segments
+- [Phase 11]: Coaching items sorted by gap_pct descending; positive feedback for clean segments; _build_coaching_response as pure function
 
 ### Pending Todos
 
@@ -92,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T16:40:38.398Z
-Stopped at: Completed 10-03-PLAN.md
+Last session: 2026-03-28T17:29:33.461Z
+Stopped at: Completed 11-01-PLAN.md
 Resume file: None

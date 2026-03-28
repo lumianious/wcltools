@@ -41,9 +41,9 @@ Requirements for M+ Coaching Intelligence milestone. Each maps to roadmap phases
 
 ### Coaching
 
-- [ ] **COACH-01**: Agent can produce per-segment coaching — aggregate style for trash segments, cast-by-cast for bosses
-- [ ] **COACH-02**: Agent can produce whole-dungeon summary with benchmark comparison (overall DPS gap, total CD efficiency, deaths, biggest improvement areas)
-- [ ] **COACH-03**: Coaching output includes both structured gap data and natural language actionable advice
+- [x] **COACH-01**: Agent can produce per-segment coaching — aggregate style for trash segments, cast-by-cast for bosses
+- [x] **COACH-02**: Agent can produce whole-dungeon summary with benchmark comparison (overall DPS gap, total CD efficiency, deaths, biggest improvement areas)
+- [x] **COACH-03**: Coaching output includes both structured gap data and natural language actionable advice
 
 ## Design Decisions
 
@@ -91,9 +91,9 @@ Deferred to future release.
 | SURV-02 | Phase 10 | Complete |
 | INT-01 | Phase 9 | Complete |
 | INT-02 | Phase 10 | Complete |
-| COACH-01 | Phase 11 | Pending |
-| COACH-02 | Phase 11 | Pending |
-| COACH-03 | Phase 11 | Pending |
+| COACH-01 | Phase 11 | Complete |
+| COACH-02 | Phase 11 | Complete |
+| COACH-03 | Phase 11 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 17 total

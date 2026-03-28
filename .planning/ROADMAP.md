@@ -88,7 +88,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — Coaching Pydantic models, transformation logic, and unit tests (COACH-01, COACH-02, COACH-03)
+- [x] 11-01-PLAN.md — Coaching Pydantic models, transformation logic, and unit tests (COACH-01, COACH-02, COACH-03)
 - [ ] 11-02-PLAN.md — MCP tool registration, documentation updates
 
 ## Progress
@@ -102,4 +102,4 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11
 | 8. M+ API Foundation | v2.0 | 2/2 | Complete | 2026-03-28 |
 | 9. M+ Benchmark Aggregation | v2.0 | 0/3 | Not started | - |
 | 10. M+ Comparison Engine | v2.0 | 3/3 | Complete    | 2026-03-28 |
-| 11. M+ Coaching Tool | v2.0 | 0/2 | Not started | - |
+| 11. M+ Coaching Tool | v2.0 | 1/2 | In Progress|  |
