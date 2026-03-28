@@ -11,6 +11,7 @@ Pydantic 数据模型 — WCL 数据结构定义。
   - M+ 基准数据 (Phase 8): MplusRankingEntry, MplusBenchmarkMeta
   - M+ benchmark aggregation (Phase 9): SegmentDamageBreakdown, SegmentCDCast, MplusBenchmarkSegment, MplusBenchmarkResponse
   - M+ comparison engine (Phase 10): SegmentDamageGap, SegmentComparison, BossCastComparison, DeathBreakdown, MplusComparisonResponse
+  - M+ coaching tool (Phase 11): CoachingItem, SegmentCoaching, DungeonCoachingSummary, MplusCoachingResponse
   - 通用: RateLimitInfo
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
@@ -840,3 +841,53 @@ class MplusComparisonResponse(BaseModel):
     death_analysis: list[DeathBreakdown] = Field(default_factory=list)
     interrupt_summary: dict = Field(default_factory=dict)
     summary: dict = Field(default_factory=dict)
+
+
+# ============================================================
+# M+ Coaching Tool (Phase 11)
+# ============================================================
+
+
+class CoachingItem(BaseModel):
+    """单条教练建议 — 结构化数据 + 自然语言建议。"""
+
+    category: str = ""          # "damage", "cooldown", "interrupt", "cast", "defensive", "death", "positive"
+    spell_name: str = ""
+    gap_pct: float = 0.0        # 差距百分比（正 = 玩家低于基准）
+    player_value: float = 0.0
+    benchmark_value: float = 0.0
+    coaching_text: str = ""     # 自然语言建议
+
+
+class SegmentCoaching(BaseModel):
+    """单个段落的教练输出。"""
+
+    position: int
+    segment_type: str = ""      # "trash" or "boss"
+    segment_name: str = ""
+    items: list[CoachingItem] = Field(default_factory=list)
+
+
+class DungeonCoachingSummary(BaseModel):
+    """整个副本的教练汇总。"""
+
+    total_damage_flags: int = 0
+    total_cd_flags: int = 0
+    total_deaths: int = 0
+    total_interrupt_flags: int = 0
+    top_improvements: list[CoachingItem] = Field(default_factory=list)
+    overall_coaching_text: str = ""
+
+
+class MplusCoachingResponse(BaseModel):
+    """coach_mplus_run 工具返回值 — M+ 副本完整教练报告。"""
+
+    report_code: str
+    player_name: str
+    spec: str
+    dungeon_name: str = ""
+    key_level: int = 0
+    benchmark_key_level: int = 0
+    segment_coaching: list[SegmentCoaching] = Field(default_factory=list)
+    death_coaching: list[CoachingItem] = Field(default_factory=list)
+    summary: DungeonCoachingSummary = Field(default_factory=DungeonCoachingSummary)

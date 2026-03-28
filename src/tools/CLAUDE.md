@@ -28,6 +28,7 @@
 | `mplus_rankings.py` | M+ 排行榜查询 — bracket 过滤、稀疏回退、缓存 | `query_mplus_rankings` |
 | `mplus_benchmarks.py` | M+ 基准聚合 — 从顶尖玩家报告提取分段基准数据 | `get_mplus_benchmarks` |
 | `mplus_comparison.py` | M+ 对比引擎 — 玩家 vs 基准全段对比 | `compare_mplus_run` |
+| `mplus_coaching.py` | M+ 教练工具 — 对比数据转化为教练建议 | `coach_mplus_run` |
 
 ## 模块依赖
 
@@ -43,6 +44,7 @@ timelines.py → cache, data, builds
 mplus_rankings.py → cache, builds (SPEC_MAPPING), models (MplusRankingEntry, MplusBenchmarkMeta)
 mplus_benchmarks.py → _wcl_helpers, dungeon_analysis, timelines, mplus_rankings, models, cache
 mplus_comparison.py → _wcl_helpers, mplus_benchmarks, dungeon_analysis, timelines, analyze, models
+mplus_coaching.py → mplus_comparison, models
 ```
 
 ## 约定
