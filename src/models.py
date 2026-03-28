@@ -10,6 +10,7 @@ Pydantic 数据模型 — WCL 数据结构定义。
   - analyze_dungeon_run (Phase 8): FightSegmentSummary, DungeonRunAnalysisResponse
   - M+ 基准数据 (Phase 8): MplusRankingEntry, MplusBenchmarkMeta
   - M+ benchmark aggregation (Phase 9): SegmentDamageBreakdown, SegmentCDCast, MplusBenchmarkSegment, MplusBenchmarkResponse
+  - M+ comparison engine (Phase 10): SegmentDamageGap, SegmentComparison, BossCastComparison, DeathBreakdown, MplusComparisonResponse
   - 通用: RateLimitInfo
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
@@ -772,3 +773,70 @@ class MplusBenchmarkResponse(BaseModel):
         default_factory=list,
         description="CD 在各段落的分布: [{spell_name, spell_id, segments: [position]}]",
     )
+
+
+# ============================================================
+# M+ Comparison Engine (Phase 10)
+# ============================================================
+
+
+class SegmentDamageGap(BaseModel):
+    """段落内单个技能的伤害差距分析。"""
+
+    spell_name: str
+    spell_id: int = 0
+    player_pct: float = 0.0
+    benchmark_pct: float = 0.0
+    gap_pct: float = 0.0
+    flagged: bool = False
+
+
+class SegmentComparison(BaseModel):
+    """单个段落的完整对比结果。"""
+
+    position: int
+    segment_type: str = ""
+    segment_name: str = ""
+    status: str = ""
+    damage_gaps: list[SegmentDamageGap] = Field(default_factory=list)
+    cd_gaps: list[dict] = Field(default_factory=list)
+    interrupt_comparison: dict = Field(default_factory=dict)
+
+
+class BossCastComparison(BaseModel):
+    """Boss 战斗的施法对比结果。"""
+
+    boss_name: str
+    position: int = 0
+    player_duration_sec: float = 0.0
+    benchmark_duration_sec: float = 0.0
+    cast_gaps: list[dict] = Field(default_factory=list)
+    cd_gaps: list[dict] = Field(default_factory=list)
+    defensive_gaps: list[dict] = Field(default_factory=list)
+    status: str = ""
+
+
+class DeathBreakdown(BaseModel):
+    """单次死亡事件的详细分析。"""
+
+    death_time_sec: float = 0.0
+    segment_position: int = 0
+    segment_name: str = ""
+    damage_taken_sources: list[dict] = Field(default_factory=list)
+    defensive_status: list[dict] = Field(default_factory=list)
+
+
+class MplusComparisonResponse(BaseModel):
+    """compare_mplus_run 工具返回值 — M+ 副本完整对比。"""
+
+    report_code: str
+    player_name: str
+    spec: str
+    dungeon_name: str = ""
+    key_level: int = 0
+    benchmark_key_level: int = 0
+    segment_comparisons: list[SegmentComparison] = Field(default_factory=list)
+    boss_comparisons: list[BossCastComparison] = Field(default_factory=list)
+    death_analysis: list[DeathBreakdown] = Field(default_factory=list)
+    interrupt_summary: dict = Field(default_factory=dict)
+    summary: dict = Field(default_factory=dict)
