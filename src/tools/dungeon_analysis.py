@@ -88,6 +88,10 @@ async def _query_all_fights(
                     encounterID
                     name
                     gameZone {{ id name }}
+                    keystoneLevel
+                    keystoneBonus
+                    keystoneAffixes
+                    keystoneTime
                 }}
                 title
             }}
