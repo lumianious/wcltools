@@ -22,7 +22,7 @@
 
 ### v2.0 M+ Coaching Intelligence
 
-- [ ] **Phase 8: M+ API Foundation** - Verify WCL M+ API parameters, add difficulty support, models, caching
+- [x] **Phase 8: M+ API Foundation** - Verify WCL M+ API parameters, add difficulty support, models, caching
 - [ ] **Phase 9: M+ Benchmark Aggregation** - Build cached benchmark bundle from top M+ players per dungeon
 - [ ] **Phase 10: M+ Comparison Engine** - Per-segment comparison, boss analysis, death analysis, interrupt comparison
 - [ ] **Phase 11: M+ Coaching Tool** - Orchestrate all data into structured coaching output with actionable advice
@@ -54,11 +54,12 @@ Plans:
   3. Agent can show CD spacing pattern across the full dungeon run — which trash segment gets which CDs
   4. Agent can retrieve defensive CD usage patterns and interrupt counts from top M+ players per dungeon segment
   5. Benchmark queries use lazy per-dungeon fetching and respect rate limits (sample_size ~5 reports)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 09-01: TBD
-- [ ] 09-02: TBD
+- [ ] 09-01-PLAN.md — Pydantic models, test fixtures, and failing test scaffold for all 7 requirements
+- [ ] 09-02-PLAN.md — Core extraction functions: segment alignment, damage/CD/defensive/interrupt extraction
+- [ ] 09-03-PLAN.md — Cross-player aggregation, caching, MCP tool registration, documentation
 
 ### Phase 10: M+ Comparison Engine
 **Goal**: Agent can compare a player's M+ performance against benchmarks across every dungeon segment
@@ -96,7 +97,7 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-7 | v1.0 | 7/7 | Complete | shipped |
-| 8. M+ API Foundation | v2.0 | 0/2 | Planning complete | - |
-| 9. M+ Benchmark Aggregation | v2.0 | 0/? | Not started | - |
+| 8. M+ API Foundation | v2.0 | 2/2 | Complete | 2026-03-28 |
+| 9. M+ Benchmark Aggregation | v2.0 | 0/3 | Not started | - |
 | 10. M+ Comparison Engine | v2.0 | 0/? | Not started | - |
 | 11. M+ Coaching Tool | v2.0 | 0/? | Not started | - |
