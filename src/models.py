@@ -9,6 +9,7 @@ Pydantic 数据模型 — WCL 数据结构定义。
   - analyze_player_log (Phase 5): SpellGap, CooldownIssue, DefensiveIssue, BuildDivergence, PlayerAnalysisResponse
   - analyze_dungeon_run (Phase 8): FightSegmentSummary, DungeonRunAnalysisResponse
   - M+ 基准数据 (Phase 8): MplusRankingEntry, MplusBenchmarkMeta
+  - M+ benchmark aggregation (Phase 9): SegmentDamageBreakdown, SegmentCDCast, MplusBenchmarkSegment, MplusBenchmarkResponse
   - 通用: RateLimitInfo
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
@@ -724,3 +725,50 @@ class MplusBenchmarkMeta(BaseModel):
     dps_p25: float = 0.0
     dps_p75: float = 0.0
     cached_at: str = ""
+
+
+# ============================================================
+# M+ Benchmark Aggregation (Phase 9)
+# ============================================================
+
+
+class SegmentDamageBreakdown(BaseModel):
+    """段落内单个技能的伤害条目。"""
+
+    spell_name: str
+    spell_id: int = 0
+    total_damage: float = 0.0
+    damage_pct: float = 0.0
+
+
+class SegmentCDCast(BaseModel):
+    """段落内聚合的大技能施放。"""
+
+    spell_name: str
+    spell_id: int = 0
+    cast_count_median: float = 0.0
+    ability_type: str = ""
+
+
+class MplusBenchmarkSegment(BaseModel):
+    """单个 Boss 边界段落的基准数据。"""
+
+    position: int
+    segment_type: str = ""
+    segment_name: str = ""
+    duration_median: float = 0.0
+    damage_breakdown: list[SegmentDamageBreakdown] = Field(default_factory=list)
+    cd_casts: list[SegmentCDCast] = Field(default_factory=list)
+    defensive_cds: list[SegmentCDCast] = Field(default_factory=list)
+    interrupt_count_median: float = 0.0
+
+
+class MplusBenchmarkResponse(BaseModel):
+    """完整副本基准数据包 — get_mplus_benchmarks 工具返回值。"""
+
+    meta: MplusBenchmarkMeta
+    segments: list[MplusBenchmarkSegment] = Field(default_factory=list)
+    cd_spacing: list[dict] = Field(
+        default_factory=list,
+        description="CD 在各段落的分布: [{spell_name, spell_id, segments: [position]}]",
+    )
