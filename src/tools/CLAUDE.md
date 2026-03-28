@@ -27,6 +27,7 @@
 | `timelines.py` | `get_cooldown_timelines` 工具 — CD 技能时间线 | `get_cooldown_timelines` |
 | `mplus_rankings.py` | M+ 排行榜查询 — bracket 过滤、稀疏回退、缓存 | `query_mplus_rankings` |
 | `mplus_benchmarks.py` | M+ 基准聚合 — 从顶尖玩家报告提取分段基准数据 | `get_mplus_benchmarks` |
+| `mplus_comparison.py` | M+ 对比引擎 — 玩家表现与基准数据差距分析 | `_compute_gap`, `_compare_trash_damage`, `_compare_interrupts` |
 
 ## 模块依赖
 
