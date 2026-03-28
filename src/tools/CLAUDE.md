@@ -26,6 +26,7 @@
 | `spec_info.py` | `get_spec_info` 工具 — 专精信息 | `get_spec_info` |
 | `timelines.py` | `get_cooldown_timelines` 工具 — CD 技能时间线 | `get_cooldown_timelines` |
 | `mplus_rankings.py` | M+ 排行榜查询 — bracket 过滤、稀疏回退、缓存 | `query_mplus_rankings` |
+| `mplus_benchmarks.py` | M+ 基准数据提取 — 段落对齐、伤害/CD/打断提取、单报告编排 | `_build_segment_positions`, `_extract_segment_damage`, `_extract_segment_cds`, `_count_segment_interrupts`, `_compute_cd_spacing`, `_fetch_report_benchmark_data` |
 
 ## 模块依赖
 
@@ -39,6 +40,7 @@ resource_timeline.py → _wcl_helpers, rotation
 boss_timeline.py → data (bosses.json)
 timelines.py → cache, data, builds
 mplus_rankings.py → cache, builds (SPEC_MAPPING), models (MplusRankingEntry, MplusBenchmarkMeta)
+mplus_benchmarks.py → _wcl_helpers, dungeon_analysis, timelines, mplus_rankings, models, cache
 ```
 
 ## 约定
