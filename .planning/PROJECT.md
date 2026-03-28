@@ -31,7 +31,7 @@ Claude can tell a player exactly what to improve in their gameplay — backed by
 
 <!-- Current scope: M+ Coaching Intelligence (v2.0) -->
 
-- [ ] M+ benchmark aggregation from WCL rankings
+- ✓ **MPLUS-02**: M+ benchmark aggregation from WCL rankings — `get_mplus_benchmarks` (Phase 9)
 - [ ] M+ cooldown timeline across all dungeon segments
 - [ ] M+ rotation profile (per-dungeon benchmarks)
 - [ ] M+ defensive patterns
@@ -52,7 +52,7 @@ Claude can tell a player exactly what to improve in their gameplay — backed by
 - **Data**: Lorrgs-exported spell/boss data (English), Blizzard API talent names (Chinese)
 - **MCP SDK**: Pinned to mcp>=1.25,<2 (v2 pre-alpha)
 - **Transport**: stdio (stdout = JSON-RPC, logging → stderr)
-- **Existing tools**: 15 registered MCP tools covering raid coaching end-to-end
+- **Existing tools**: 16 registered MCP tools covering raid coaching end-to-end + M+ benchmarks
 - **M+ data structure**: WCL reports group fights by `gameZone`; each dungeon run has segment fights + optional aggregate fight
 
 ## Constraints
@@ -102,4 +102,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 after milestone v2.0 initialization*
+*Last updated: 2026-03-28 after Phase 9 completion*
