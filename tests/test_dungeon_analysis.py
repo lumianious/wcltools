@@ -43,14 +43,14 @@ MOCK_MULTI_DUNGEON_RESPONSE = {
         "report": {
             "fights": [
                 {"id": 0, "startTime": 0, "endTime": 9999999, "kill": True, "encounterID": 0, "name": "All", "gameZone": None},
-                # Pit of Saron (zone 200): fights 1-3
+                # Pit of Saron (zone 200): trash + boss + trash
                 {"id": 1, "startTime": 0, "endTime": 60000, "kill": True, "encounterID": 0, "name": "Ymirjar Graveblade", "gameZone": _ZONE_B},
-                {"id": 2, "startTime": 70000, "endTime": 170000, "kill": True, "encounterID": 0, "name": "Forgemaster Garfrost", "gameZone": _ZONE_B},
-                {"id": 3, "startTime": 180000, "endTime": 280000, "kill": True, "encounterID": 0, "name": "Ick / Krick", "gameZone": _ZONE_B},
-                # Magisters' Terrace (zone 300): fights 4-6
-                {"id": 4, "startTime": 500000, "endTime": 560000, "kill": True, "encounterID": 0, "name": "Seranel Sunlash", "gameZone": _ZONE_C},
-                {"id": 5, "startTime": 570000, "endTime": 670000, "kill": True, "encounterID": 0, "name": "Gemellus", "gameZone": _ZONE_C},
-                {"id": 6, "startTime": 680000, "endTime": 780000, "kill": True, "encounterID": 12811, "name": "Magisters' Terrace", "gameZone": _ZONE_C},
+                {"id": 2, "startTime": 70000, "endTime": 170000, "kill": True, "encounterID": 9001, "name": "Forgemaster Garfrost", "gameZone": _ZONE_B},
+                {"id": 3, "startTime": 180000, "endTime": 280000, "kill": True, "encounterID": 9002, "name": "Ick / Krick", "gameZone": _ZONE_B},
+                # Magisters' Terrace (zone 300): boss + boss + aggregate (keystoneLevel)
+                {"id": 4, "startTime": 500000, "endTime": 560000, "kill": True, "encounterID": 9003, "name": "Seranel Sunlash", "gameZone": _ZONE_C},
+                {"id": 5, "startTime": 570000, "endTime": 670000, "kill": True, "encounterID": 9004, "name": "Gemellus", "gameZone": _ZONE_C},
+                {"id": 6, "startTime": 500000, "endTime": 780000, "kill": True, "encounterID": 12811, "name": "Magisters' Terrace", "gameZone": _ZONE_C, "keystoneLevel": 10, "keystoneBonus": 1},
             ],
             "title": "Mythic+ Session",
         }
@@ -339,11 +339,13 @@ def test_group_fights_by_dungeon():
     # 按时间排序: Pit of Saron 先，Magisters' Terrace 后
     assert runs[0].zone_name == "Pit of Saron"
     assert runs[1].zone_name == "Magisters' Terrace"
+    # Pit of Saron: 1 trash + 2 boss fights = 3 segment_fights
     assert len(runs[0].segment_fights) == 3
-    # Magisters': 2 segment + 1 aggregate (encounterID=12811)
+    # Magisters': 2 boss fights in segment_fights, aggregate has keystoneLevel
     assert len(runs[1].segment_fights) == 2
     assert runs[1].aggregate_fight is not None
     assert runs[1].aggregate_fight["encounterID"] == 12811
+    assert runs[1].aggregate_fight["keystoneLevel"] == 10
 
 
 # ============================================================

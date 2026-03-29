@@ -625,7 +625,7 @@ MPLUS_RANKINGS_RESPONSE = {
 # 结构: 聚合 fight + trash/boss 段落
 # ----------------------------------------------------------
 MPLUS_REPORT_FIGHTS = [
-    # 聚合 fight（encounterID > 0 表示整个副本级别）
+    # 聚合 fight（encounterID > 0 且 keystoneLevel > 0 = 副本级别汇总）
     {
         "id": 1,
         "name": "The Stonevault",
@@ -648,8 +648,6 @@ MPLUS_REPORT_FIGHTS = [
         "encounterID": 0,
         "kill": True,
         "gameZone": {"id": 12345, "name": "The Stonevault"},
-        "keystoneLevel": 10,
-        "keystoneBonus": 1,
     },
     # Trash #2
     {
@@ -660,20 +658,16 @@ MPLUS_REPORT_FIGHTS = [
         "encounterID": 0,
         "kill": True,
         "gameZone": {"id": 12345, "name": "The Stonevault"},
-        "keystoneLevel": 10,
-        "keystoneBonus": 1,
     },
-    # Boss 1: Skarmorak
+    # Boss 1: Skarmorak (encounterID > 0，无 keystoneLevel)
     {
         "id": 4,
         "name": "Skarmorak",
         "startTime": 60000,
         "endTime": 120000,
-        "encounterID": 0,
+        "encounterID": 9101,
         "kill": True,
         "gameZone": {"id": 12345, "name": "The Stonevault"},
-        "keystoneLevel": 10,
-        "keystoneBonus": 1,
     },
     # Trash between bosses
     {
@@ -684,20 +678,16 @@ MPLUS_REPORT_FIGHTS = [
         "encounterID": 0,
         "kill": True,
         "gameZone": {"id": 12345, "name": "The Stonevault"},
-        "keystoneLevel": 10,
-        "keystoneBonus": 1,
     },
-    # Boss 2: Master Machinists
+    # Boss 2: Master Machinists (encounterID > 0，无 keystoneLevel)
     {
         "id": 6,
         "name": "Master Machinists",
         "startTime": 150000,
         "endTime": 210000,
-        "encounterID": 0,
+        "encounterID": 9102,
         "kill": True,
         "gameZone": {"id": 12345, "name": "The Stonevault"},
-        "keystoneLevel": 10,
-        "keystoneBonus": 1,
     },
     # Trash after Boss 2
     {
@@ -708,20 +698,16 @@ MPLUS_REPORT_FIGHTS = [
         "encounterID": 0,
         "kill": True,
         "gameZone": {"id": 12345, "name": "The Stonevault"},
-        "keystoneLevel": 10,
-        "keystoneBonus": 1,
     },
-    # Boss 3: Void Speaker Eirich
+    # Boss 3: Void Speaker Eirich (encounterID > 0，无 keystoneLevel)
     {
         "id": 8,
         "name": "Void Speaker Eirich",
         "startTime": 240000,
         "endTime": 300000,
-        "encounterID": 0,
+        "encounterID": 9103,
         "kill": True,
         "gameZone": {"id": 12345, "name": "The Stonevault"},
-        "keystoneLevel": 10,
-        "keystoneBonus": 1,
     },
 ]
 

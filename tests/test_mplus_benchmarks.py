@@ -104,11 +104,11 @@ class TestSegmentAlignment:
         from src.tools.mplus_benchmarks import _build_segment_positions
         from tests.fixtures.wcl_responses import MPLUS_REPORT_FIGHTS
 
-        # 过滤掉聚合 fight (encounterID > 0 且 id == 1)
+        # 过滤掉聚合 fight（有 keystoneLevel 的是副本级汇总）
         fights = [
             f
             for f in MPLUS_REPORT_FIGHTS
-            if f.get("encounterID", 0) == 0 and f.get("id") != 1
+            if not (f.get("keystoneLevel") and f.get("keystoneLevel") > 0)
         ]
         segments = _build_segment_positions(
             fights,

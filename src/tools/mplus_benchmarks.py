@@ -752,13 +752,20 @@ async def get_mplus_benchmarks(
 async def _detect_boss_names(
     client: WCLClient, entry: MplusRankingEntry,
 ) -> list[str]:
-    """从第一份报告推导 boss 名称列表。"""
+    """
+    从第一份报告推导 boss 名称列表。
+
+    M+ 报告中 boss fight 有 encounterID > 0 但无 keystoneLevel。
+    副本聚合 fight 也有 encounterID > 0 但同时有 keystoneLevel > 0，需排除。
+    """
     try:
         fights, _ = await _query_all_fights(client, entry.report_code)
         return [
             f.get("name", "")
             for f in fights
-            if f.get("encounterID", 0) > 0 and f.get("name")
+            if f.get("encounterID", 0) > 0
+            and f.get("name")
+            and not (f.get("keystoneLevel") and f.get("keystoneLevel") > 0)
         ]
     except Exception as exc:
         logger.warning("Boss 名称检测失败 %s: %s", entry.report_code, exc)

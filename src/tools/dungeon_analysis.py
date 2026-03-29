@@ -125,8 +125,12 @@ def _group_fights_by_dungeon(fights: list[dict]) -> list[DungeonRun]:
 
     WCL M+ 报告结构:
     - 每个副本 run 的所有 fight 共享同一个 gameZone
-    - 部分已完成的 run 有一个 encounterID > 0 的聚合 fight（整个副本作为一场）
-    - 段落 fight (encounterID == 0) 是单独的 trash/boss pull
+    - 副本聚合 fight: encounterID > 0 且 keystoneLevel > 0（整个副本作为一场）
+    - Boss fight: encounterID > 0 但无 keystoneLevel（单个 boss 战斗）
+    - Trash fight: encounterID == 0（小怪段落）
+
+    注意: Boss fight 和 trash fight 都放入 segment_fights。
+    只有带 keystoneLevel 的副本级聚合才放入 aggregate_fight。
 
     Returns:
         按最早 fight startTime 排序的 DungeonRun 列表
@@ -145,9 +149,11 @@ def _group_fights_by_dungeon(fights: list[dict]) -> list[DungeonRun]:
             runs_by_zone[zone_id] = DungeonRun(zone_id, zone_name)
 
         run = runs_by_zone[zone_id]
-        if f.get("encounterID", 0) > 0:
+        # 副本聚合: 有 keystoneLevel 的 fight 是整个副本的汇总
+        if f.get("keystoneLevel") and f.get("keystoneLevel") > 0:
             run.aggregate_fight = f
         else:
+            # Boss fight (encounterID > 0) 和 trash (encounterID == 0) 都是段落
             run.segment_fights.append(f)
 
     # 按最早 fight 的 startTime 排序
@@ -243,7 +249,9 @@ def _classify_segments(
     """
     将战斗列表分为 boss 和 trash 段落。
 
-    注意: 输入应已经过滤（不含 fight id 0 和副本级聚合 fight）。
+    注意: 输入应已过滤（不含 fight id 0 和副本级聚合 fight）。
+    Boss fight: encounterID > 0（由 _group_fights_by_dungeon 正确分入 segment_fights）
+    Trash fight: encounterID == 0
 
     Returns:
         (boss_fights, trash_fights)
