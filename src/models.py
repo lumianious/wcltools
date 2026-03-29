@@ -759,6 +759,9 @@ class MplusBenchmarkSegment(BaseModel):
     segment_type: str = ""
     segment_name: str = ""
     duration_median: float = 0.0
+    dps_median: float = 0.0
+    dps_p25: float = 0.0
+    dps_p75: float = 0.0
     damage_breakdown: list[SegmentDamageBreakdown] = Field(default_factory=list)
     cd_casts: list[SegmentCDCast] = Field(default_factory=list)
     defensive_cds: list[SegmentCDCast] = Field(default_factory=list)
@@ -799,6 +802,9 @@ class SegmentComparison(BaseModel):
     segment_type: str = ""
     segment_name: str = ""
     status: str = ""
+    player_dps: float = 0.0
+    benchmark_dps: float = 0.0
+    dps_gap_pct: float = 0.0
     damage_gaps: list[SegmentDamageGap] = Field(default_factory=list)
     cd_gaps: list[dict] = Field(default_factory=list)
     interrupt_comparison: dict = Field(default_factory=dict)

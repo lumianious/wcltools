@@ -601,11 +601,17 @@ async def _extract_single_segment(
     offensive, defensive = _extract_segment_cds(cast_events, tracked)
     interrupt_count = _count_segment_interrupts(interrupt_events)
 
+    # 段落总伤害和 DPS
+    total_damage = sum(e.get("total", 0) for e in damage_entries)
+    dps = round(total_damage / duration_sec, 1) if duration_sec > 0 else 0.0
+
     return {
         "position": seg["position"],
         "segment_type": seg["segment_type"],
         "name": seg["name"],
         "duration_sec": round(duration_sec, 1),
+        "total_damage": total_damage,
+        "dps": dps,
         "damage_breakdown": damage_breakdown,
         "cd_casts": offensive,
         "defensive_cds": defensive,
@@ -653,6 +659,18 @@ def _aggregate_segment_data(
             statistics.median([s["duration_sec"] for s in segs]), 1
         )
 
+        # DPS 统计: median, p25, p75
+        dps_values = [s["dps"] for s in segs if s.get("dps", 0) > 0]
+        if dps_values:
+            dps_median = round(statistics.median(dps_values), 1)
+            if len(dps_values) >= 2:
+                qs = statistics.quantiles(dps_values, n=4)
+                dps_p25, dps_p75 = round(qs[0], 1), round(qs[2], 1)
+            else:
+                dps_p25 = dps_p75 = dps_median
+        else:
+            dps_median = dps_p25 = dps_p75 = 0.0
+
         # 伤害分布聚合: 按 spell_id 分组，取 damage_pct 中位数
         damage_breakdown = _aggregate_damage_breakdown(segs)
 
@@ -670,6 +688,9 @@ def _aggregate_segment_data(
             segment_type=first["segment_type"],
             segment_name=first["name"],
             duration_median=duration_median,
+            dps_median=dps_median,
+            dps_p25=dps_p25,
+            dps_p75=dps_p75,
             damage_breakdown=damage_breakdown,
             cd_casts=cd_casts,
             defensive_cds=defensive_cds,

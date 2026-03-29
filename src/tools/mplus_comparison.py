@@ -527,6 +527,7 @@ async def _extract_player_segment_data(
             client, report_code, start, end, source_id
         )
 
+        result["total_damage"] = sum(e.get("total", 0) for e in damage_entries)
         result["damage_breakdown"] = _extract_segment_damage(damage_entries)
         offensive, defensive = _extract_segment_cds(cast_events, tracked)
         result["cd_casts"] = offensive
@@ -537,7 +538,11 @@ async def _extract_player_segment_data(
             ev.get("abilityGameID", 0) for ev in interrupt_events
         }
     else:
-        # boss 段落: 查询 cast events 用于 cast-by-cast 对比
+        # boss 段落: 查询 damage table + cast events
+        damage_entries = await _query_segment_damage_table(
+            client, report_code, start, end, source_id
+        )
+        result["total_damage"] = sum(e.get("total", 0) for e in damage_entries)
         cast_events = await _query_segment_cast_events(
             client, report_code, start, end, source_id
         )
@@ -583,13 +588,25 @@ def _build_segment_comparison(
     seg_type = player_data["segment_type"]
     seg_name = player_data["name"]
 
+    # 玩家段落 DPS
+    p_dur = player_data.get("duration_sec", 0)
+    p_total_dmg = player_data.get("total_damage", 0)
+    player_dps = round(p_total_dmg / p_dur, 1) if p_dur > 0 else 0.0
+
     if bench_seg is None:
         return SegmentComparison(
             position=pos,
             segment_type=seg_type,
             segment_name=seg_name,
+            player_dps=player_dps,
             status="no_benchmark",
         )
+
+    # benchmark DPS
+    bench_dps = bench_seg.dps_median
+    dps_gap_pct = round(
+        (player_dps - bench_dps) / bench_dps * 100, 1
+    ) if bench_dps > 0 else 0.0
 
     # --- 伤害对比 ---
     damage_gaps = _compare_trash_damage(
@@ -641,6 +658,9 @@ def _build_segment_comparison(
         position=pos,
         segment_type=seg_type,
         segment_name=seg_name,
+        player_dps=player_dps,
+        benchmark_dps=bench_dps,
+        dps_gap_pct=dps_gap_pct,
         status="compared",
         damage_gaps=damage_gaps,
         cd_gaps=cd_gaps,

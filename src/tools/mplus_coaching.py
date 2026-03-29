@@ -257,11 +257,13 @@ def _build_dungeon_summary(
     seg_coaching: list[SegmentCoaching],
     death_coaching: list[CoachingItem],
     comparison_summary: dict,
+    segment_comparisons: list | None = None,
 ) -> DungeonCoachingSummary:
     """构建整个副本的教练汇总。
 
     从 comparison_summary 取 flag 计数，收集所有非 positive 的 coaching items，
     按 gap_pct 降序取 top 5 作为 top_improvements。
+    包含 per-segment DPS gap 信息。
     """
     total_damage = comparison_summary.get("total_damage_flags", 0)
     total_cd = comparison_summary.get("total_cd_flags", 0)
@@ -282,6 +284,17 @@ def _build_dungeon_summary(
     all_items.sort(key=lambda i: i.gap_pct, reverse=True)
     top_improvements = all_items[:5]
 
+    # 计算整体 DPS gap
+    dps_text = ""
+    if segment_comparisons:
+        segs_with_dps = [
+            s for s in segment_comparisons
+            if s.benchmark_dps > 0 and s.player_dps > 0
+        ]
+        if segs_with_dps:
+            avg_gap = sum(s.dps_gap_pct for s in segs_with_dps) / len(segs_with_dps)
+            dps_text = f"Average DPS gap: {avg_gap:+.1f}% vs benchmark. "
+
     # 构建整体 NL 文本
     issue_parts = []
     if total_damage:
@@ -293,7 +306,8 @@ def _build_dungeon_summary(
     if total_interrupt:
         issue_parts.append(f"{total_interrupt} interrupt issues")
 
-    overall_text = ", ".join(issue_parts) + "." if issue_parts else "No major issues found."
+    overall_text = dps_text
+    overall_text += ", ".join(issue_parts) + "." if issue_parts else "No major issues found."
     if top_improvements:
         overall_text += f" Biggest area: {top_improvements[0].spell_name or top_improvements[0].category}."
 
@@ -331,7 +345,10 @@ def _build_coaching_response(comparison: MplusComparisonResponse) -> MplusCoachi
     death_coaching = _coach_deaths(comparison.death_analysis)
 
     # 副本汇总
-    summary = _build_dungeon_summary(segment_coaching, death_coaching, comparison.summary)
+    summary = _build_dungeon_summary(
+        segment_coaching, death_coaching, comparison.summary,
+        segment_comparisons=comparison.segment_comparisons,
+    )
 
     return MplusCoachingResponse(
         report_code=comparison.report_code,
