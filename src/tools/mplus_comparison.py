@@ -183,6 +183,11 @@ def _compare_boss_casts(
         spell_name = player_spell_names.get(sid) or bs.get("spell_name", f"Spell#{sid}")
 
         player_casts = player_spell_counts.get(sid, 0)
+
+        # 跳过双方都为 0 的技能（无意义对比）
+        if player_casts == 0 and bench_casts == 0:
+            continue
+
         player_cpm = round(player_casts / dur_min, 2)
 
         gap = _compute_gap(float(player_casts), float(bench_casts))
@@ -223,6 +228,8 @@ def _compare_boss_cds(
     """对比玩家 boss 战斗中的大 CD 使用情况。
 
     根据战斗时长和 CD 时间计算预期施放次数，与玩家实际使用对比。
+    只检查玩家实际施放过的 CD 技能（即出现在 player_spell_counts 中），
+    避免标记玩家没有天赋的技能。
 
     Args:
         player_spell_counts: {spell_id: cast_count}
@@ -244,9 +251,13 @@ def _compare_boss_cds(
         if cd_sec <= 0:
             continue
 
+        # 只检查玩家实际施放过的 CD（避免标记无天赋技能）
+        player_casts = player_spell_counts.get(sid, 0)
+        if player_casts == 0:
+            continue
+
         # 预期施放次数: 开战立刻用一次 + 之后每 CD 一次
         expected = 1 + int((fight_duration - 1) / cd_sec) if fight_duration > 0 else 1
-        player_casts = player_spell_counts.get(sid, 0)
         missed = max(0, expected - player_casts)
 
         if missed > 0:
@@ -602,6 +613,12 @@ def _build_segment_comparison(
     for sid, bcd in bench_cd_by_id.items():
         p_info = player_cd_by_id.get(sid)
         p_count = p_info["count"] if p_info else 0.0
+        # 跳过玩家未施放过的 CD（可能没有该天赋）
+        if p_info is None:
+            continue
+        # 跳过双方都为 0 的无意义对比
+        if p_count == 0 and bcd.cast_count_median == 0:
+            continue
         gap = _compute_gap(float(p_count), float(bcd.cast_count_median))
         cd_gaps.append({
             "spell_name": bcd.spell_name,

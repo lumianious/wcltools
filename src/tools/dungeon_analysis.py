@@ -59,7 +59,7 @@ logger = logging.getLogger(__name__)
 # ============================================================
 # 常量
 # ============================================================
-_MAX_SEGMENTS_FOR_PER_FIGHT_DPS = 10  # 超过此数量不查段落 DPS
+_MAX_SEGMENTS_FOR_PER_FIGHT_DPS = 40  # dungeonPulls 模式下典型 M+ 有 20-30 pulls
 _TOP_N_ABILITIES = 15  # 伤害排行前 N
 
 
