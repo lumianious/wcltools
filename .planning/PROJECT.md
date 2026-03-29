@@ -2,7 +2,7 @@
 
 ## What This Is
 
-An MCP server that feeds WarcraftLogs data into Claude, enabling Claude to act as a personal raid and M+ coach. Interprets aggregate top-player behavior and combines it with deep class/rotation knowledge to give boss-specific, dungeon-specific, actionable advice. User plays WoW with the Chinese client.
+An MCP server that feeds WarcraftLogs data into Claude, enabling Claude to act as a personal raid and M+ coach. Interprets aggregate top-player behavior and combines it with deep class/rotation knowledge to give boss-specific, dungeon-specific, actionable advice. Covers both raid encounters and M+ dungeon runs with per-segment coaching. User plays WoW with the Chinese client.
 
 ## Core Value
 
@@ -12,7 +12,7 @@ Claude can tell a player exactly what to improve in their gameplay — backed by
 
 ### Validated
 
-<!-- Shipped and confirmed valuable. Phases 1-7 complete. -->
+<!-- Shipped and confirmed valuable. -->
 
 - ✓ **RAID-01**: Discover current bosses/dungeons — `get_encounters` (Phase 1)
 - ✓ **RAID-02**: Aggregate talent/gear/stat meta from top parsers — `get_top_builds` (Phase 2)
@@ -25,17 +25,14 @@ Claude can tell a player exactly what to improve in their gameplay — backed by
 - ✓ **RAID-09**: Advanced APL analysis, eclipse metrics, CD windows — (Phase 6)
 - ✓ **RAID-10**: Boss cast timeline, cast sequence, buff/resource timelines — (Phase 7)
 - ✓ **RAID-11**: Coaching context for session setup — `get_coaching_context` (Phase 7)
-- ✓ **MPLUS-01**: M+ dungeon run analysis (per-run DPS, damage, deaths, segments) — `analyze_dungeon_run` (Quick task)
+- ✓ **MPLUS-01**: M+ dungeon run analysis — `analyze_dungeon_run` (Quick task)
+- ✓ **MPLUS-02**: M+ benchmark aggregation from WCL rankings — `get_mplus_benchmarks` (v2.0 Phase 9)
+- ✓ **MPLUS-03**: M+ comparison engine — `compare_mplus_run` (v2.0 Phase 10)
+- ✓ **MPLUS-04**: M+ per-segment coaching with gap analysis — `coach_mplus_run` (v2.0 Phase 11)
 
 ### Active
 
-<!-- Current scope: M+ Coaching Intelligence (v2.0) -->
-
-- ✓ **MPLUS-02**: M+ benchmark aggregation from WCL rankings — `get_mplus_benchmarks` (Phase 9)
-- [ ] M+ cooldown timeline across all dungeon segments
-- [ ] M+ rotation profile (per-dungeon benchmarks)
-- ✓ **MPLUS-03**: M+ comparison engine — `compare_mplus_run` (Phase 10)
-- ✓ **MPLUS-04**: M+ per-segment coaching with gap analysis — `coach_mplus_run` (Phase 11)
+(No active requirements — next milestone TBD)
 
 ### Out of Scope
 
@@ -43,6 +40,7 @@ Claude can tell a player exactly what to improve in their gameplay — backed by
 - Healer/tank-specific coaching — DPS focus first
 - PvP analysis — different data model entirely
 - Pasteable talent import strings — WCL doesn't expose import format
+- Per-trash-pack route matching — route-dependent, unreliable; use boss-bounded segments instead
 
 ## Context
 
@@ -51,15 +49,16 @@ Claude can tell a player exactly what to improve in their gameplay — backed by
 - **Data**: Lorrgs-exported spell/boss data (English), Blizzard API talent names (Chinese)
 - **MCP SDK**: Pinned to mcp>=1.25,<2 (v2 pre-alpha)
 - **Transport**: stdio (stdout = JSON-RPC, logging → stderr)
-- **Existing tools**: 18 registered MCP tools covering raid coaching end-to-end + M+ benchmarks + M+ comparison + M+ coaching
-- **M+ data structure**: WCL reports group fights by `gameZone`; each dungeon run has segment fights + optional aggregate fight
+- **Existing tools**: 18 registered MCP tools — 15 raid coaching + 3 M+ coaching (benchmarks, comparison, coaching)
+- **M+ data structure**: WCL reports group fights by `gameZone`; boss-bounded segment alignment for cross-player comparison
+- **Codebase**: ~11,700 LOC Python, 699 tests
 
 ## Constraints
 
-- **Rate limits**: 3600 WCL points/hour — M+ analysis must budget carefully (multiple reports for benchmarks)
+- **Rate limits**: 3600 WCL points/hour — M+ benchmark fetch ~25-35 points per dungeon, comparison ~15-25 points
 - **Language**: Chinese for user-facing spell/talent names (zh_CN locale)
 - **MCP SDK**: Pin to v1.x, no v2 migration
-- **API only**: WCL M+ rankings endpoint structure may differ from raid rankings — verify during research
+- **File size**: Max 800 lines per file, max 50 lines per function
 
 ## Key Decisions
 
@@ -70,24 +69,23 @@ Claude can tell a player exactly what to improve in their gameplay — backed by
 | Chinese talent names via Blizzard API bridge | WCL uses internal IDs, need 3-system bridge | ✓ Good |
 | gameZone-based run detection for M+ | Reliable grouping even with multi-dungeon reports | ✓ Good |
 | Active DPS (sum of fight durations) not wall-clock | Avoids misleading low DPS from between-pull downtime | ✓ Good |
+| Boss-bounded segments for M+ analysis | Sidesteps route-matching problems across players | ✓ Good |
+| difficulty=10 for M+ rankings, bracket as min filter | Verified via live WCL API in Phase 8 | ✓ Good |
+| Sample size 5 for M+ benchmarks | Balances signal quality vs rate limit budget | ✓ Good |
+| Median aggregation for cross-player benchmarks | Robust to outliers | ✓ Good |
+| 20% gap threshold for coaching flags | Simple, actionable, avoids noise | ✓ Good |
+| Dual output (structured + NL) for coaching | Machine-readable for tools, human-readable for Claude | ✓ Good |
 
-## Current Milestone: v2.0 M+ Coaching Intelligence
+## Shipped Milestones
 
-**Goal:** Enable Claude to coach M+ dungeon performance by comparing player data against top-player benchmarks across all dungeon segments.
-
-**Target features:**
-- M+ benchmark aggregation from WCL rankings
-- M+ cooldown timeline (full-run CD spacing across all segments)
-- M+ rotation profile (per-dungeon benchmarks from top players)
-- M+ defensive patterns for dungeon segments
-- M+ death analysis correlated with incoming damage
-- M+ per-segment coaching with structured gap analysis + actionable advice
+- **v1.0 Raid Coaching** — Phases 1-7: Full raid coaching pipeline from encounter discovery to actionable advice
+- **v2.0 M+ Coaching Intelligence** — Phases 8-11: M+ benchmark aggregation, per-segment comparison, and coaching with structured gap analysis
 
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
 
-**After each phase transition** (via `/gsd:transition`):
+**After each phase transition:**
 1. Requirements invalidated? → Move to Out of Scope with reason
 2. Requirements validated? → Move to Validated with phase reference
 3. New requirements emerged? → Add to Active
@@ -101,4 +99,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-29 after Phase 11 completion (v2.0 milestone complete)*
+*Last updated: 2026-03-29 after v2.0 milestone completion*
