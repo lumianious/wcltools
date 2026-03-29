@@ -801,6 +801,7 @@ async def compare_mplus_run(
     )
     from src.tools.mplus_benchmarks import (
         _build_segment_positions,
+        _collect_segment_fights,
         _extract_boss_benchmark,
         get_mplus_benchmarks,
     )
@@ -818,8 +819,8 @@ async def compare_mplus_run(
     selected_run = _select_dungeon_run(runs, fight)
     dungeon_name = selected_run.zone_name
 
-    # 取 segment fights（排除聚合 fight）
-    seg_fights = selected_run.segment_fights
+    # 取 segment fights（处理子区域场景）
+    seg_fights = _collect_segment_fights(selected_run, runs)
     if not seg_fights:
         raise ValueError(f"副本 '{dungeon_name}' 中无有效战斗段落")
 

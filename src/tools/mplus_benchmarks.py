@@ -363,8 +363,9 @@ async def _fetch_report_benchmark_data(
             logger.warning("未找到玩家 %s in %s", entry.name, entry.report_code)
             return None
 
-        # Step 4: 构建段落 + 查询各段数据
-        seg_fights = [f for f in run.segment_fights if not _is_aggregate(f, run)]
+        # Step 4: 收集段落（处理子区域场景）+ 查询各段数据
+        all_seg_fights = _collect_segment_fights(run, runs)
+        seg_fights = [f for f in all_seg_fights if not _is_aggregate(f, run)]
         segments = _build_segment_positions(seg_fights, boss_names)
         tracked = _build_tracked_spells(spec)
 
@@ -390,6 +391,35 @@ def _find_matching_run(runs: list, fight_id: int):
         if run.segment_fights:
             return run
     return None
+
+
+def _collect_segment_fights(matched_run, all_runs: list) -> list[dict]:
+    """
+    收集匹配 run 的所有段落 fight。
+
+    WCL M+ 子区域问题: 部分副本（如 Magisters' Terrace）的聚合 fight
+    使用父区域 gameZone，但段落 fight 使用子区域 gameZone（如 The Voidspire）。
+    当匹配 run 有聚合但无段落时，从所有其他 run 收集段落。
+    """
+    if matched_run.segment_fights:
+        return matched_run.segment_fights
+
+    # 匹配 run 无段落 → 子区域场景，收集其他 run 的段落
+    logger.info(
+        "匹配 run (%s) 无段落，从子区域收集",
+        matched_run.zone_name,
+    )
+    all_segments: list[dict] = []
+    for run in all_runs:
+        if run is matched_run:
+            continue
+        # 只收集无 aggregate 的 run（子区域 run 没有自己的 aggregate）
+        # 或者有段落的 run
+        if run.segment_fights:
+            all_segments.extend(run.segment_fights)
+
+    all_segments.sort(key=lambda f: f["startTime"])
+    return all_segments
 
 
 def _is_aggregate(fight: dict, run) -> bool:
@@ -757,16 +787,22 @@ async def _detect_boss_names(
 
     M+ 报告中 boss fight 有 encounterID > 0 但无 keystoneLevel。
     副本聚合 fight 也有 encounterID > 0 但同时有 keystoneLevel > 0，需排除。
+    去重: 同一个 boss 可能有多次 wipe，只保留唯一名称。
     """
     try:
         fights, _ = await _query_all_fights(client, entry.report_code)
-        return [
-            f.get("name", "")
-            for f in fights
-            if f.get("encounterID", 0) > 0
-            and f.get("name")
-            and not (f.get("keystoneLevel") and f.get("keystoneLevel") > 0)
-        ]
+        seen: set[str] = set()
+        names: list[str] = []
+        for f in fights:
+            if f.get("encounterID", 0) <= 0:
+                continue
+            if f.get("keystoneLevel") and f.get("keystoneLevel") > 0:
+                continue
+            name = f.get("name", "")
+            if name and name not in seen:
+                seen.add(name)
+                names.append(name)
+        return names
     except Exception as exc:
         logger.warning("Boss 名称检测失败 %s: %s", entry.report_code, exc)
         return []
