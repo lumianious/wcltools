@@ -436,19 +436,21 @@ async def _extract_all_segments(
     client: WCLClient, report_code: str, source_id: int,
     segments: list[dict], tracked: dict[int, dict],
 ) -> list[dict]:
-    """逐段提取 damage/casts/interrupts 数据。"""
-    results: list[dict] = []
-    for seg in segments:
+    """并行提取各段落 damage/casts/interrupts 数据。"""
+
+    async def _safe_extract(seg: dict) -> dict | None:
         try:
-            seg_data = await _extract_single_segment(
+            return await _extract_single_segment(
                 client, report_code, source_id, seg, tracked
             )
-            results.append(seg_data)
         except Exception as exc:
             logger.warning(
                 "段落 %d 查询失败 (%s): %s", seg["position"], report_code, exc
             )
-    return results
+            return None
+
+    raw = await asyncio.gather(*[_safe_extract(s) for s in segments])
+    return [r for r in raw if r is not None]
 
 
 async def _extract_boss_benchmark(
