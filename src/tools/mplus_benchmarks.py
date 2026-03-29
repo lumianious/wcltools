@@ -363,8 +363,8 @@ async def _fetch_report_benchmark_data(
             logger.warning("未找到玩家 %s in %s", entry.name, entry.report_code)
             return None
 
-        # Step 4: 收集段落（处理子区域场景）+ 查询各段数据
-        all_seg_fights = _collect_segment_fights(run, runs)
+        # Step 4: 收集段落（处理子区域场景，只保留 boss kill）+ 查询各段数据
+        all_seg_fights = _collect_segment_fights(run, runs, kills_only=True)
         seg_fights = [f for f in all_seg_fights if not _is_aggregate(f, run)]
         segments = _build_segment_positions(seg_fights, boss_names)
         tracked = _build_tracked_spells(spec)
@@ -393,33 +393,55 @@ def _find_matching_run(runs: list, fight_id: int):
     return None
 
 
-def _collect_segment_fights(matched_run, all_runs: list) -> list[dict]:
+def _collect_segment_fights(
+    matched_run, all_runs: list, *, kills_only: bool = False,
+) -> list[dict]:
     """
     收集匹配 run 的所有段落 fight。
 
     WCL M+ 子区域问题: 部分副本（如 Magisters' Terrace）的聚合 fight
     使用父区域 gameZone，但段落 fight 使用子区域 gameZone（如 The Voidspire）。
     当匹配 run 有聚合但无段落时，从所有其他 run 收集段落。
+
+    Args:
+        kills_only: 若 True，boss fight 只保留最后一次 kill（过滤 wipe 尝试）。
+                    Trash fight 全部保留。用于 benchmark 场景减少 API 调用。
     """
     if matched_run.segment_fights:
-        return matched_run.segment_fights
+        fights = matched_run.segment_fights
+    else:
+        # 匹配 run 无段落 → 子区域场景
+        logger.info(
+            "匹配 run (%s) 无段落，从子区域收集",
+            matched_run.zone_name,
+        )
+        fights = []
+        for run in all_runs:
+            if run is matched_run:
+                continue
+            if run.segment_fights:
+                fights.extend(run.segment_fights)
 
-    # 匹配 run 无段落 → 子区域场景，收集其他 run 的段落
-    logger.info(
-        "匹配 run (%s) 无段落，从子区域收集",
-        matched_run.zone_name,
-    )
-    all_segments: list[dict] = []
-    for run in all_runs:
-        if run is matched_run:
-            continue
-        # 只收集无 aggregate 的 run（子区域 run 没有自己的 aggregate）
-        # 或者有段落的 run
-        if run.segment_fights:
-            all_segments.extend(run.segment_fights)
+    fights = sorted(fights, key=lambda f: f["startTime"])
 
-    all_segments.sort(key=lambda f: f["startTime"])
-    return all_segments
+    if not kills_only:
+        return fights
+
+    # 过滤: boss fight 只保留 kill=True 的最后一次（同 encounterID）
+    # Trash (encounterID == 0) 全部保留
+    boss_kills: dict[int, dict] = {}
+    result: list[dict] = []
+    for f in fights:
+        eid = f.get("encounterID", 0)
+        if eid == 0:
+            result.append(f)
+        elif f.get("kill") is True:
+            boss_kills[eid] = f  # 同 boss 多次 kill 取最后一次
+
+    # 按时间顺序插入 boss kills
+    all_with_bosses = result + list(boss_kills.values())
+    all_with_bosses.sort(key=lambda f: f["startTime"])
+    return all_with_bosses
 
 
 def _is_aggregate(fight: dict, run) -> bool:
