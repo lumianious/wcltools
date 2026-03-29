@@ -802,6 +802,7 @@ async def compare_mplus_run(
     from src.tools.mplus_benchmarks import (
         _build_segment_positions,
         _collect_segment_fights,
+        _detect_boss_names,
         _extract_boss_benchmark,
         get_mplus_benchmarks,
     )
@@ -837,16 +838,8 @@ async def compare_mplus_run(
     tracked = _build_tracked_spells(spec)
 
     # ---- (e) 构建玩家段落 ----
-    # 从 benchmark 段落推导 boss 名称
-    boss_names = [
-        s.segment_name for s in bench_resp.segments if s.segment_type == "boss"
-    ]
-    # 也从 fights 推导（更可靠）
-    if not boss_names:
-        boss_names = [
-            f.get("name", "") for f in fights
-            if f.get("encounterID", 0) > 0 and f.get("name")
-        ]
+    # 从 masterData 获取 boss 名称（M+ fights 全部 encounterID=0，不能用 encounterID 判断）
+    boss_names = await _detect_boss_names(client, report_code)
     player_segs = _build_segment_positions(seg_fights, boss_names)
 
     # ---- (f) 逐段提取玩家数据 ----

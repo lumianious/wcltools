@@ -89,7 +89,11 @@ def _build_segment_positions(
     trash_fights: list[dict] = []
 
     for f in sorted_fights:
-        is_boss = f.get("name", "").lower() in boss_set
+        fight_name = f.get("name", "").lower()
+        # 精确匹配或子串匹配（处理 "Ick / Krick" 包含 "Ick" 和 "Krick"）
+        is_boss = fight_name in boss_set or any(
+            bn in fight_name for bn in boss_set
+        )
 
         if is_boss:
             # 先 flush 累积的 trash
