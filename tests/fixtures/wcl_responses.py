@@ -712,6 +712,108 @@ MPLUS_REPORT_FIGHTS = [
 ]
 
 # ----------------------------------------------------------
+# dungeonPulls 响应 — 模拟 _query_dungeon_pulls 返回的 pull 列表
+# 副本: The Stonevault, 对应聚合 fight id=1
+# dungeonPulls 中 encounterID>0=boss, encounterID==0=trash
+# ----------------------------------------------------------
+MPLUS_DUNGEON_PULLS = [
+    # Trash pull 1
+    {
+        "id": 1,
+        "name": "Trash",
+        "startTime": 0,
+        "endTime": 15000,
+        "encounterID": 0,
+        "kill": True,
+    },
+    # Trash pull 2
+    {
+        "id": 2,
+        "name": "Trash",
+        "startTime": 15000,
+        "endTime": 30000,
+        "encounterID": 0,
+        "kill": True,
+    },
+    # Trash pull 3
+    {
+        "id": 3,
+        "name": "Trash",
+        "startTime": 30000,
+        "endTime": 60000,
+        "encounterID": 0,
+        "kill": True,
+    },
+    # Boss 1: Skarmorak
+    {
+        "id": 4,
+        "name": "Skarmorak",
+        "startTime": 60000,
+        "endTime": 120000,
+        "encounterID": 9101,
+        "kill": True,
+    },
+    # Trash pull 4
+    {
+        "id": 5,
+        "name": "Trash",
+        "startTime": 120000,
+        "endTime": 135000,
+        "encounterID": 0,
+        "kill": True,
+    },
+    # Trash pull 5
+    {
+        "id": 6,
+        "name": "Trash",
+        "startTime": 135000,
+        "endTime": 150000,
+        "encounterID": 0,
+        "kill": True,
+    },
+    # Boss 2: Master Machinists
+    {
+        "id": 7,
+        "name": "Master Machinists",
+        "startTime": 150000,
+        "endTime": 210000,
+        "encounterID": 9102,
+        "kill": True,
+    },
+    # Trash pull 6
+    {
+        "id": 8,
+        "name": "Trash",
+        "startTime": 210000,
+        "endTime": 240000,
+        "encounterID": 0,
+        "kill": True,
+    },
+    # Boss 3: Void Speaker Eirich
+    {
+        "id": 9,
+        "name": "Void Speaker Eirich",
+        "startTime": 240000,
+        "endTime": 300000,
+        "encounterID": 9103,
+        "kill": True,
+    },
+]
+
+# dungeonPulls 的 WCL GraphQL 原始响应格式
+MPLUS_DUNGEON_PULLS_RESPONSE = {
+    "reportData": {
+        "report": {
+            "fights": [
+                {
+                    "dungeonPulls": MPLUS_DUNGEON_PULLS,
+                }
+            ]
+        }
+    }
+}
+
+# ----------------------------------------------------------
 # 段落伤害表响应 — 模拟 DamageDone table 查询
 # ----------------------------------------------------------
 MPLUS_DAMAGE_TABLE_RESPONSE = {

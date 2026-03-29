@@ -1,18 +1,22 @@
 """
 M+ Benchmark Aggregation — 从顶尖玩家报告中提取分段基准数据。
 
-Pipeline: rankings -> reports -> segments -> extract(damage, CDs, interrupts) -> aggregate -> cache
+Pipeline: rankings -> reports -> dungeonPulls -> segments -> extract(damage, CDs, interrupts) -> aggregate -> cache
 
 WCL 数据流:
   1. query_mplus_rankings -> report_code + fight_id (from Phase 8)
-  2. _query_all_fights -> fight list with gameZone/keystoneLevel
-  3. _build_segment_positions -> boss-bounded segment alignment
+  2. _query_dungeon_pulls(fight_id) -> pull list with encounterID
+  3. _build_segment_positions(pulls) -> boss-bounded segment alignment (encounterID>0=boss)
   4. Per-segment queries: damage table, cast events, interrupt events
   5. Aggregate across 5 players with median
 
+  回退（无 dungeonPulls 时）:
+  2b. _query_all_fights -> fight list with gameZone/keystoneLevel
+  3b. _build_segment_positions(fights, boss_names) -> boss name matching
+
 公开接口:
   - get_mplus_benchmarks(client, spec, encounter_id, key_level) -> MplusBenchmarkResponse
-  - _build_segment_positions(fights, boss_names) -> list[dict]
+  - _build_segment_positions(pulls, boss_names?) -> list[dict]
   - _extract_segment_damage(entries, top_n) -> list[SegmentDamageBreakdown]
   - _extract_segment_cds(events, tracked_spells) -> (offensive, defensive)
   - _count_segment_interrupts(events) -> int
@@ -45,7 +49,11 @@ from src.models import (
     SegmentDamageBreakdown,
 )
 from src.tools._wcl_helpers import find_actor_id_ci
-from src.tools.dungeon_analysis import _group_fights_by_dungeon, _query_all_fights
+from src.tools.dungeon_analysis import (
+    _group_fights_by_dungeon,
+    _query_all_fights,
+    _query_dungeon_pulls,
+)
 from src.tools.mplus_rankings import query_mplus_rankings
 from src.tools.timelines import _build_tracked_spells, _query_master_data
 from src.wcl_client import WCLClient
@@ -65,71 +73,86 @@ TOP_N_DAMAGE_SPELLS = 10
 
 
 def _build_segment_positions(
-    fights: list[dict], boss_names: list[str]
+    pulls: list[dict], boss_names: list[str] | None = None,
 ) -> list[dict]:
     """
-    按 boss 边界分配段落位置。
+    从 dungeonPulls 构建有序段落列表。
 
-    Position 方案: 0=第一段trash, 1=第一个boss, 2=boss间trash, 3=第二个boss, 依此类推。
-    相邻 trash fight 合并为一个逻辑段落。
+    dungeonPulls 中每个 pull 有 encounterID:
+      - encounterID > 0 → boss pull
+      - encounterID == 0 → trash pull
+
+    相邻 trash pull 合并为一个逻辑 trash 段落。
+    Position 方案: 0=第一段trash, 1=第一个boss, 2=boss间trash, ...
+
+    也兼容旧式 top-level fights 调用（boss_names 模式）:
+    当 pull 没有 encounterID 字段时，回退到 boss_names 名称匹配。
 
     Args:
-        fights: 段落 fight 列表（不含聚合 fight）
-        boss_names: 已知 boss 名称列表（用于名称匹配）
+        pulls: dungeonPulls 列表或段落 fight 列表
+        boss_names: (deprecated) 用于名称匹配的 boss 列表，仅旧模式使用
 
     Returns:
         [{position, segment_type, name, start_time, end_time, fights}, ...]
     """
-    sorted_fights = sorted(fights, key=lambda f: f["startTime"])
-    boss_set = {n.lower() for n in boss_names}
+    sorted_pulls = sorted(pulls, key=lambda f: f["startTime"])
+    # 名称匹配回退（兼容旧调用方式）
+    boss_set = {n.lower() for n in (boss_names or [])}
     segments: list[dict] = []
     position = 0
 
     # 累积中的 trash 段落
-    trash_fights: list[dict] = []
+    trash_pulls: list[dict] = []
 
-    for f in sorted_fights:
-        fight_name = f.get("name", "").lower()
-        # 精确匹配或子串匹配（处理 "Ick / Krick" 包含 "Ick" 和 "Krick"）
-        is_boss = fight_name in boss_set or any(
-            bn in fight_name for bn in boss_set
-        )
+    for p in sorted_pulls:
+        # 优先使用 encounterID 判断 boss（dungeonPulls 模式）
+        encounter_id = p.get("encounterID", 0)
+        if encounter_id > 0:
+            is_boss = True
+        elif boss_set:
+            # 回退: 名称匹配（旧 top-level fights 模式）
+            fight_name = p.get("name", "").lower()
+            is_boss = fight_name in boss_set or any(
+                bn in fight_name for bn in boss_set
+            )
+        else:
+            is_boss = False
 
         if is_boss:
             # 先 flush 累积的 trash
-            if trash_fights:
-                segments.append(_flush_trash(trash_fights, position))
+            if trash_pulls:
+                segments.append(_flush_trash(trash_pulls, position))
                 position += 1
-                trash_fights = []
+                trash_pulls = []
             # 添加 boss 段落
             segments.append({
                 "position": position,
                 "segment_type": "boss",
-                "name": f.get("name", ""),
-                "start_time": f["startTime"],
-                "end_time": f["endTime"],
-                "fights": [f],
+                "name": p.get("name", ""),
+                "start_time": p["startTime"],
+                "end_time": p["endTime"],
+                "fights": [p],
             })
             position += 1
         else:
-            trash_fights.append(f)
+            trash_pulls.append(p)
 
     # 最后剩余的 trash
-    if trash_fights:
-        segments.append(_flush_trash(trash_fights, position))
+    if trash_pulls:
+        segments.append(_flush_trash(trash_pulls, position))
 
     return segments
 
 
-def _flush_trash(fights: list[dict], position: int) -> dict:
-    """将累积的 trash fights 合并为一个逻辑段落。"""
+def _flush_trash(pulls: list[dict], position: int) -> dict:
+    """将累积的 trash pulls 合并为一个逻辑段落。"""
     return {
         "position": position,
         "segment_type": "trash",
         "name": f"Trash #{position // 2 + 1}",
-        "start_time": fights[0]["startTime"],
-        "end_time": fights[-1]["endTime"],
-        "fights": list(fights),
+        "start_time": pulls[0]["startTime"],
+        "end_time": pulls[-1]["endTime"],
+        "fights": list(pulls),
     }
 
 
@@ -348,26 +371,68 @@ async def _fetch_report_benchmark_data(
     client: WCLClient, entry: MplusRankingEntry,
     spec: str, boss_names: list[str],
 ) -> dict | None:
-    """从单个排行榜报告中提取全段落基准数据，失败返回 None。"""
+    """从单个排行榜报告中提取全段落基准数据，失败返回 None。
+
+    使用 dungeonPulls 获取副本内各 pull（boss + trash），
+    通过 encounterID 区分 boss/trash，不再依赖 boss_names 名称匹配。
+    """
     try:
-        # Step 1: 获取 fights + 分组
-        fights, _ = await _query_all_fights(client, entry.report_code)
-        runs = _group_fights_by_dungeon(fights)
+        # Step 1: 查询 dungeonPulls（通过聚合 fight_id）
+        pulls = await _query_dungeon_pulls(
+            client, entry.report_code, entry.fight_id
+        )
+        if not pulls:
+            # 回退: 旧模式（兼容无 dungeonPulls 的报告）
+            logger.info(
+                "dungeonPulls 为空，回退旧模式: %s fight_id=%d",
+                entry.report_code, entry.fight_id,
+            )
+            return await _fetch_report_benchmark_data_legacy(
+                client, entry, spec, boss_names
+            )
 
-        # Step 2: 定位匹配 run
-        run = _find_matching_run(runs, entry.fight_id)
-        if run is None:
-            logger.warning("未找到匹配 run: %s fight_id=%d", entry.report_code, entry.fight_id)
-            return None
-
-        # Step 3: masterData -> source_id
+        # Step 2: masterData -> source_id
         actors = await _query_master_data(client, entry.report_code)
         source_id = find_actor_id_ci(actors, entry.name)
         if source_id is None:
             logger.warning("未找到玩家 %s in %s", entry.name, entry.report_code)
             return None
 
-        # Step 4: 收集段落（处理子区域场景）+ 查询各段数据
+        # Step 3: 从 dungeonPulls 构建段落（encounterID 区分 boss/trash）
+        segments = _build_segment_positions(pulls)
+        tracked = _build_tracked_spells(spec)
+
+        result_segments = await _extract_all_segments(
+            client, entry.report_code, source_id, segments, tracked
+        )
+
+        return {"segments": result_segments, "source_id": source_id}
+
+    except Exception as exc:
+        logger.warning("报告数据提取失败 %s: %s", entry.report_code, exc)
+        return None
+
+
+async def _fetch_report_benchmark_data_legacy(
+    client: WCLClient, entry: MplusRankingEntry,
+    spec: str, boss_names: list[str],
+) -> dict | None:
+    """旧模式: 从 top-level fights 提取段落（兼容无 dungeonPulls 的报告）。"""
+    try:
+        fights, _ = await _query_all_fights(client, entry.report_code)
+        runs = _group_fights_by_dungeon(fights)
+
+        run = _find_matching_run(runs, entry.fight_id)
+        if run is None:
+            logger.warning("未找到匹配 run: %s fight_id=%d", entry.report_code, entry.fight_id)
+            return None
+
+        actors = await _query_master_data(client, entry.report_code)
+        source_id = find_actor_id_ci(actors, entry.name)
+        if source_id is None:
+            logger.warning("未找到玩家 %s in %s", entry.name, entry.report_code)
+            return None
+
         all_seg_fights = _collect_segment_fights(run, runs)
         seg_fights = [f for f in all_seg_fights if not _is_aggregate(f, run)]
         segments = _build_segment_positions(seg_fights, boss_names)
@@ -380,7 +445,7 @@ async def _fetch_report_benchmark_data(
         return {"segments": result_segments, "source_id": source_id}
 
     except Exception as exc:
-        logger.warning("报告数据提取失败 %s: %s", entry.report_code, exc)
+        logger.warning("报告数据提取失败(legacy) %s: %s", entry.report_code, exc)
         return None
 
 

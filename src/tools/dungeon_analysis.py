@@ -104,6 +104,54 @@ async def _query_all_fights(
     return fights, title
 
 
+async def _query_dungeon_pulls(
+    client: WCLClient, report_code: str, fight_id: int
+) -> list[dict]:
+    """
+    查询 M+ 副本 run 的 dungeonPulls 列表。
+
+    WCL M+ 报告中，单个副本 run 对应一个聚合 fight（有 keystoneLevel），
+    其 dungeonPulls 子字段包含该 run 的所有 pull（boss + trash）。
+
+    ReportDungeonPull 字段:
+      id, name, startTime, endTime, encounterID (>0=boss, 0=trash),
+      kill, enemyNPCs: [{id, gameID}]
+
+    Args:
+        client: WCL API 客户端
+        report_code: 报告代码
+        fight_id: 聚合 fight ID（带 keystoneLevel 的副本级 fight）
+
+    Returns:
+        dungeonPulls 列表，每项含 id/name/startTime/endTime/encounterID/kill
+    """
+    gql = f"""
+        reportData {{
+            report(code: "{report_code}") {{
+                fights(fightIDs: [{fight_id}]) {{
+                    dungeonPulls {{
+                        id
+                        name
+                        startTime
+                        endTime
+                        encounterID
+                        kill
+                    }}
+                }}
+            }}
+        }}
+    """
+    data = await client.query(gql)
+    fights = (
+        data.get("reportData", {})
+        .get("report", {})
+        .get("fights", [])
+    )
+    if not fights:
+        return []
+    return fights[0].get("dungeonPulls") or []
+
+
 # ============================================================
 # 副本 run 分组: 按 gameZone 识别不同副本
 # ============================================================
@@ -368,13 +416,27 @@ async def analyze_dungeon_run(
         raise ValueError(f"报告 {report_code} 中未找到任何副本 run")
 
     selected_run = _select_dungeon_run(all_runs, fight)
-    real_fights = _get_run_fights(selected_run)
     dungeon_name = selected_run.zone_name
 
-    logger.info(
-        "选中副本: %s (%d 个段落, 共 %d 个副本可选)",
-        dungeon_name, len(real_fights), len(all_runs),
-    )
+    # 优先使用 dungeonPulls（M+ 报告的正确数据源）
+    real_fights: list[dict] = []
+    agg = selected_run.aggregate_fight
+    if agg is not None:
+        pulls = await _query_dungeon_pulls(client, report_code, agg["id"])
+        if pulls:
+            real_fights = pulls
+            logger.info(
+                "选中副本(dungeonPulls): %s (%d pulls, 共 %d 个副本可选)",
+                dungeon_name, len(real_fights), len(all_runs),
+            )
+
+    # 回退: 旧 top-level fights 模式
+    if not real_fights:
+        real_fights = _get_run_fights(selected_run)
+        logger.info(
+            "选中副本(legacy): %s (%d 个段落, 共 %d 个副本可选)",
+            dungeon_name, len(real_fights), len(all_runs),
+        )
 
     if not real_fights:
         raise ValueError(f"副本 '{dungeon_name}' 中无有效战斗段落")

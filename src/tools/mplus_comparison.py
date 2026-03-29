@@ -797,6 +797,7 @@ async def compare_mplus_run(
     from src.tools.dungeon_analysis import (
         _group_fights_by_dungeon,
         _query_all_fights,
+        _query_dungeon_pulls,
         _select_dungeon_run,
     )
     from src.tools.mplus_benchmarks import (
@@ -820,11 +821,6 @@ async def compare_mplus_run(
     selected_run = _select_dungeon_run(runs, fight)
     dungeon_name = selected_run.zone_name
 
-    # 取 segment fights（处理子区域场景）
-    seg_fights = _collect_segment_fights(selected_run, runs)
-    if not seg_fights:
-        raise ValueError(f"副本 '{dungeon_name}' 中无有效战斗段落")
-
     # ---- (b) 获取 benchmark 数据 ----
     bench_resp = await get_mplus_benchmarks(client, spec, encounter_id, key_level)
 
@@ -837,10 +833,24 @@ async def compare_mplus_run(
     # ---- (d) 构建 tracked spells ----
     tracked = _build_tracked_spells(spec)
 
-    # ---- (e) 构建玩家段落 ----
-    # 从 masterData 获取 boss 名称（M+ fights 全部 encounterID=0，不能用 encounterID 判断）
-    boss_names = await _detect_boss_names(client, report_code)
-    player_segs = _build_segment_positions(seg_fights, boss_names)
+    # ---- (e) 构建玩家段落 (优先 dungeonPulls，回退旧模式) ----
+    player_segs: list[dict] = []
+    agg = selected_run.aggregate_fight
+    if agg is not None:
+        # 尝试 dungeonPulls 模式
+        pulls = await _query_dungeon_pulls(
+            client, report_code, agg["id"]
+        )
+        if pulls:
+            player_segs = _build_segment_positions(pulls)
+
+    if not player_segs:
+        # 回退: 旧 top-level fights 模式
+        seg_fights = _collect_segment_fights(selected_run, runs)
+        if not seg_fights:
+            raise ValueError(f"副本 '{dungeon_name}' 中无有效战斗段落")
+        boss_names = await _detect_boss_names(client, report_code)
+        player_segs = _build_segment_positions(seg_fights, boss_names)
 
     # ---- (f) 逐段提取玩家数据 ----
     player_seg_data: list[dict] = []
