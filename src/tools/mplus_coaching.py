@@ -141,8 +141,8 @@ def _coach_trash_segment(seg: SegmentComparison) -> SegmentCoaching:
 def _generate_boss_advice(gap: dict, boss_name: str) -> str:
     """生成 boss 段落的自然语言建议 — 包含施法次数对比信息。"""
     spell = gap.get("spell_name", "Unknown")
-    player = gap.get("player_count", gap.get("player_casts", 0))
-    bench = gap.get("bench_count", gap.get("benchmark_median", 0))
+    player = gap.get("player_casts", gap.get("player_count", 0))
+    bench = gap.get("benchmark_casts", gap.get("bench_count", 0))
     return (
         f"On {boss_name}, cast {spell} more — "
         f"you had {player} casts vs benchmark {bench}."
@@ -164,8 +164,8 @@ def _coach_boss_segment(boss: BossCastComparison) -> SegmentCoaching:
             category="cast",
             spell_name=gap.get("spell_name", ""),
             gap_pct=gap.get("gap_pct", 0.0),
-            player_value=gap.get("player_count", 0.0),
-            benchmark_value=gap.get("bench_count", 0.0),
+            player_value=gap.get("player_casts", 0.0),
+            benchmark_value=gap.get("benchmark_casts", 0.0),
             coaching_text=_generate_boss_advice(gap, boss.boss_name),
         ))
 

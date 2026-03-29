@@ -184,8 +184,8 @@ def _compare_boss_casts(
 
         player_casts = player_spell_counts.get(sid, 0)
 
-        # 跳过双方都为 0 的技能（无意义对比）
-        if player_casts == 0 and bench_casts == 0:
+        # 跳过玩家未施放的技能（可能没有对应天赋）
+        if player_casts == 0:
             continue
 
         player_cpm = round(player_casts / dur_min, 2)
