@@ -1,8 +1,15 @@
 """
 WarcraftLogs API 客户端 — OAuth + GraphQL + 速率限制追踪。
 
-认证流程: OAuth2 client_credentials
-API 端点: https://www.warcraftlogs.com/api/v2/client (GraphQL)
+认证流程:
+  - client_credentials → /api/v2/client（公开日志）
+  - authorization_code → /api/v2/user（公开 + 私有日志）
+  优先使用 user token（可访问私有日志），回退到 client_credentials。
+  User token 过期时自动用 refresh_token 刷新。
+
+API 端点:
+  - 公开: https://www.warcraftlogs.com/api/v2/client
+  - 用户: https://www.warcraftlogs.com/api/v2/user
 速率限制: 基于 point 的，每次查询附带 rateLimitData 追踪剩余额度
 
 [PROTOCOL]: 变更时更新此文档，然后检查父级
@@ -36,7 +43,8 @@ logger = logging.getLogger(__name__)
 # 常量
 # ============================================================
 WCL_TOKEN_URL = "https://www.warcraftlogs.com/oauth/token"
-WCL_API_URL = "https://www.warcraftlogs.com/api/v2/client"
+WCL_CLIENT_API_URL = "https://www.warcraftlogs.com/api/v2/client"
+WCL_USER_API_URL = "https://www.warcraftlogs.com/api/v2/user"
 
 # token 提前 5 分钟刷新，避免边界失效
 TOKEN_REFRESH_MARGIN = 300
@@ -49,13 +57,24 @@ class WCLClientError(Exception):
 class WCLClient:
     """WarcraftLogs GraphQL 客户端（异步）。"""
 
-    def __init__(self, client_id: str, client_secret: str) -> None:
+    def __init__(
+        self,
+        client_id: str,
+        client_secret: str,
+        user_token: Optional[str] = None,
+        refresh_token: Optional[str] = None,
+    ) -> None:
         self._client_id = client_id
         self._client_secret = client_secret
 
-        # token 状态
+        # client_credentials token 状态
         self._access_token: Optional[str] = None
         self._token_expires_at: float = 0.0
+
+        # user token 状态（authorization_code 流）
+        self._user_token: Optional[str] = user_token
+        self._refresh_token: Optional[str] = refresh_token
+        self._user_token_expires_at: float = 0.0
 
         # 速率限制状态
         self._rate_limit: Optional[RateLimitInfo] = None
@@ -82,13 +101,32 @@ class WCLClient:
     # OAuth 认证
     # ============================================================
 
+    @property
+    def _has_user_token(self) -> bool:
+        """是否配置了 user token（可访问私有日志）。"""
+        return bool(self._user_token)
+
+    @property
+    def _api_url(self) -> str:
+        """根据 token 类型选择 API 端点。"""
+        return WCL_USER_API_URL if self._has_user_token else WCL_CLIENT_API_URL
+
     def _token_is_valid(self) -> bool:
-        """检查当前 token 是否仍然有效。"""
+        """检查当前 client_credentials token 是否仍然有效。"""
         if not self._access_token:
             return False
         return time.time() < (self._token_expires_at - TOKEN_REFRESH_MARGIN)
 
-    async def _refresh_token(self) -> None:
+    def _user_token_is_valid(self) -> bool:
+        """检查 user token 是否仍然有效。"""
+        if not self._user_token:
+            return False
+        # 首次使用时 expires_at=0，视为有效（尝试一次）
+        if self._user_token_expires_at == 0:
+            return True
+        return time.time() < (self._user_token_expires_at - TOKEN_REFRESH_MARGIN)
+
+    async def _refresh_client_token(self) -> None:
         """通过 client_credentials 流获取新 token。"""
         http = await self._get_http()
         resp = await http.post(
@@ -102,14 +140,51 @@ class WCLClient:
         self._access_token = body["access_token"]
         expires_in = body.get("expires_in", 86400)
         self._token_expires_at = time.time() + expires_in
-        logger.info(
-            "WCL token 已刷新，有效期 %d 秒", expires_in
+        logger.info("WCL client token 已刷新，有效期 %d 秒", expires_in)
+
+    async def _refresh_user_token(self) -> None:
+        """通过 refresh_token 刷新 user token。"""
+        if not self._refresh_token:
+            logger.warning("User token 过期且无 refresh_token，回退到 client_credentials")
+            self._user_token = None
+            return
+
+        http = await self._get_http()
+        resp = await http.post(
+            WCL_TOKEN_URL,
+            data={
+                "grant_type": "refresh_token",
+                "refresh_token": self._refresh_token,
+                "client_id": self._client_id,
+                "client_secret": self._client_secret,
+            },
         )
+        if resp.status_code != 200:
+            logger.warning(
+                "User token 刷新失败 (%d)，回退到 client_credentials",
+                resp.status_code,
+            )
+            self._user_token = None
+            return
+
+        body = resp.json()
+        self._user_token = body["access_token"]
+        self._refresh_token = body.get("refresh_token", self._refresh_token)
+        expires_in = body.get("expires_in", 86400)
+        self._user_token_expires_at = time.time() + expires_in
+        logger.info("WCL user token 已刷新，有效期 %d 秒", expires_in)
 
     async def _ensure_auth(self) -> None:
         """确保持有有效 token，过期则自动刷新。"""
+        if self._has_user_token:
+            if not self._user_token_is_valid():
+                await self._refresh_user_token()
+            # 刷新后仍有 user token → 使用 user API
+            if self._has_user_token:
+                return
+        # 回退到 client_credentials
         if not self._token_is_valid():
-            await self._refresh_token()
+            await self._refresh_client_token()
 
     # ============================================================
     # GraphQL 查询
@@ -142,11 +217,15 @@ class WCLClient:
             )
         full_query = f"query {{ {graphql} {rate_limit_fragment} }}"
 
+        # 选择 token 和端点
+        token = self._user_token if self._has_user_token else self._access_token
+        api_url = self._api_url
+
         http = await self._get_http()
         resp = await http.post(
-            WCL_API_URL,
+            api_url,
             json={"query": full_query},
-            headers={"Authorization": f"Bearer {self._access_token}"},
+            headers={"Authorization": f"Bearer {token}"},
         )
         resp.raise_for_status()
         result = resp.json()

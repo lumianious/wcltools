@@ -84,8 +84,17 @@ def _get_wcl_client() -> WCLClient:
                 "缺少 WCL_CLIENT_ID 或 WCL_CLIENT_SECRET 环境变量。"
                 "请在 .env 文件中配置。"
             )
-        _wcl_client = WCLClient(client_id, client_secret)
-        logger.info("WCL 客户端已初始化")
+        user_token = os.environ.get("WCL_USER_TOKEN") or None
+        refresh_token = os.environ.get("WCL_REFRESH_TOKEN") or None
+        _wcl_client = WCLClient(
+            client_id, client_secret,
+            user_token=user_token,
+            refresh_token=refresh_token,
+        )
+        if user_token:
+            logger.info("WCL 客户端已初始化（user token → 私有日志可访问）")
+        else:
+            logger.info("WCL 客户端已初始化（client_credentials → 仅公开日志）")
     return _wcl_client
 
 
