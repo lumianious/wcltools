@@ -184,7 +184,7 @@ def _extract_segment_damage(
     return [
         SegmentDamageBreakdown(
             spell_name=e.get("name", ""),
-            spell_id=e.get("id", 0),
+            spell_id=e.get("guid", e.get("id", 0)) or 0,
             total_damage=e.get("total", 0),
             damage_pct=round(e.get("total", 0) / total_damage * 100, 1),
         )
