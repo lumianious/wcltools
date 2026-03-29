@@ -363,8 +363,8 @@ async def _fetch_report_benchmark_data(
             logger.warning("未找到玩家 %s in %s", entry.name, entry.report_code)
             return None
 
-        # Step 4: 收集段落（处理子区域场景，只保留 boss kill）+ 查询各段数据
-        all_seg_fights = _collect_segment_fights(run, runs, kills_only=True)
+        # Step 4: 收集段落（处理子区域场景）+ 查询各段数据
+        all_seg_fights = _collect_segment_fights(run, runs)
         seg_fights = [f for f in all_seg_fights if not _is_aggregate(f, run)]
         segments = _build_segment_positions(seg_fights, boss_names)
         tracked = _build_tracked_spells(spec)
@@ -393,24 +393,21 @@ def _find_matching_run(runs: list, fight_id: int):
     return None
 
 
-def _collect_segment_fights(
-    matched_run, all_runs: list, *, kills_only: bool = False,
-) -> list[dict]:
+def _collect_segment_fights(matched_run, all_runs: list) -> list[dict]:
     """
     收集匹配 run 的所有段落 fight。
 
     WCL M+ 子区域问题: 部分副本（如 Magisters' Terrace）的聚合 fight
-    使用父区域 gameZone，但段落 fight 使用子区域 gameZone（如 The Voidspire）。
-    当匹配 run 有聚合但无段落时，从所有其他 run 收集段落。
-
-    Args:
-        kills_only: 若 True，boss fight 只保留最后一次 kill（过滤 wipe 尝试）。
-                    Trash fight 全部保留。用于 benchmark 场景减少 API 调用。
+    使用父区域 gameZone，但段落 fight 使用子区域 gameZone（如 Maisara Caverns）。
+    当匹配 run 有聚合但无段落时，从没有自己 aggregate 的 run 收集段落
+    （有 aggregate 的 run 是独立副本/Raid，不属于当前副本）。
     """
     if matched_run.segment_fights:
         fights = matched_run.segment_fights
     else:
         # 匹配 run 无段落 → 子区域场景
+        # 只收集没有自己 aggregate 的 run（即子区域 run）
+        # 有 aggregate 的 run 是独立副本/Raid，不属于当前副本
         logger.info(
             "匹配 run (%s) 无段落，从子区域收集",
             matched_run.zone_name,
@@ -419,29 +416,14 @@ def _collect_segment_fights(
         for run in all_runs:
             if run is matched_run:
                 continue
+            # 跳过有自己 aggregate 的 run（独立副本/Raid）
+            if run.aggregate_fight is not None:
+                continue
             if run.segment_fights:
                 fights.extend(run.segment_fights)
 
     fights = sorted(fights, key=lambda f: f["startTime"])
-
-    if not kills_only:
-        return fights
-
-    # 过滤: boss fight 只保留 kill=True 的最后一次（同 encounterID）
-    # Trash (encounterID == 0) 全部保留
-    boss_kills: dict[int, dict] = {}
-    result: list[dict] = []
-    for f in fights:
-        eid = f.get("encounterID", 0)
-        if eid == 0:
-            result.append(f)
-        elif f.get("kill") is True:
-            boss_kills[eid] = f  # 同 boss 多次 kill 取最后一次
-
-    # 按时间顺序插入 boss kills
-    all_with_bosses = result + list(boss_kills.values())
-    all_with_bosses.sort(key=lambda f: f["startTime"])
-    return all_with_bosses
+    return fights
 
 
 def _is_aggregate(fight: dict, run) -> bool:
@@ -751,7 +733,7 @@ async def get_mplus_benchmarks(
         return MplusBenchmarkResponse(meta=meta, segments=[], cd_spacing=[])
 
     # Step 4: 从第一份报告推导 boss 名称
-    boss_names = await _detect_boss_names(client, entries[0])
+    boss_names = await _detect_boss_names(client, entries[0].report_code)
 
     # Step 5: 并行获取报告（Semaphore 限制并发）
     sem = asyncio.Semaphore(3)
@@ -802,29 +784,43 @@ async def get_mplus_benchmarks(
 
 
 async def _detect_boss_names(
-    client: WCLClient, entry: MplusRankingEntry,
+    client: WCLClient, report_code: str,
 ) -> list[str]:
     """
-    从第一份报告推导 boss 名称列表。
+    从报告的 masterData 获取 boss NPC 名称列表。
 
-    M+ 报告中 boss fight 有 encounterID > 0 但无 keystoneLevel。
-    副本聚合 fight 也有 encounterID > 0 但同时有 keystoneLevel > 0，需排除。
-    去重: 同一个 boss 可能有多次 wipe，只保留唯一名称。
+    WCL M+ 段落 fight 全部 encounterID=0，无法从 fight 数据区分 boss/trash。
+    masterData.actors(type: "NPC", subType: "Boss") 提供可靠的 boss 名单。
     """
     try:
-        fights, _ = await _query_all_fights(client, entry.report_code)
+        gql = f"""
+            reportData {{
+                report(code: "{report_code}") {{
+                    masterData(translate: true) {{
+                        actors(type: "NPC", subType: "Boss") {{
+                            name
+                        }}
+                    }}
+                }}
+            }}
+        """
+        data = await client.query(gql)
+        actors = (
+            data.get("reportData", {})
+            .get("report", {})
+            .get("masterData", {})
+            .get("actors", [])
+        )
+        # 去重，排除 "Environment"
         seen: set[str] = set()
         names: list[str] = []
-        for f in fights:
-            if f.get("encounterID", 0) <= 0:
-                continue
-            if f.get("keystoneLevel") and f.get("keystoneLevel") > 0:
-                continue
-            name = f.get("name", "")
-            if name and name not in seen:
+        for a in actors:
+            name = a.get("name", "")
+            if name and name != "Environment" and name not in seen:
                 seen.add(name)
                 names.append(name)
+        logger.info("Boss 名称检测: %s → %d bosses", report_code, len(names))
         return names
     except Exception as exc:
-        logger.warning("Boss 名称检测失败 %s: %s", entry.report_code, exc)
+        logger.warning("Boss 名称检测失败 %s: %s", report_code, exc)
         return []
