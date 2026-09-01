@@ -3,31 +3,34 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "wow-mcp-server"
-version = "0.1.0"
-description = "WoW raid coaching MCP server backed by WarcraftLogs API"
-requires-python = ">=3.10"
+name = "wcltools"
+version = "0.4.0"
+description = "Warcraft Logs raid timelines for humans and agents"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
 dependencies = [
-    "mcp>=1.25,<2",
-    "httpx",
-    "pydantic>=2.0",
-    "python-dotenv",
+    "httpx>=0.28,<1",
+    "keyring>=25,<26",
+    "platformdirs>=4,<5",
 ]
 
 [project.scripts]
-wow-mcp = "src.server:main"
+wcltools = "wcltools.cli:main"
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.0",
-    "pytest-asyncio>=0.24",
-    "pytest-mock",
+    "pytest>=8,<10",
+    "pyinstaller>=6.16,<7",
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["wcltools"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/wcltools", "/scripts/build_release.py", "/scripts/refresh_catalog.py", "/tests", "/README.md", "/LICENSE", "/NOTICE", "/pyproject.toml", "/uv.lock", "/.github"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-asyncio_mode = "auto"
 pythonpath = ["."]
+addopts = "--import-mode=importlib"

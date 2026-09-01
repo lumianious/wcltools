@@ -1,0 +1,17 @@
+WCLTools is an independent project, not affiliated with Blizzard Entertainment
+or Warcraft Logs. Warcraft and related names are trademarks of their owners.
+
+Bundled specialization/spell labels, spell and talent tooltips, talent-tree
+relationships, and encounter-journal text are retrieved from Blizzard's Game Data
+API. The catalog records its exact namespace, retrieval time, source URLs, and
+unavailable records. It contains no icons or private logs.
+The software's MIT license does not relicense third-party game content.
+
+Warcraft Logs supplies report data through its official API under each user's
+own authorization. Do not distribute credentials or private report caches.
+
+Historical work used Lorrgs (https://github.com/gitarrg/lorrgs, MIT per its README)
+to seed spell IDs. This release regenerates labels from Blizzard; it does not
+bundle Lorrgs source, its cooldown rules, or SimulationCraft APLs.
+
+Packaged dependencies retain their own licenses in the executable bundle.
