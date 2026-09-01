@@ -21,7 +21,7 @@ def main():
         args += ["--hidden-import", "keyring.backends.Windows"]
     args.append(str(ROOT / "wcltools" / "__main__.py"))
     subprocess.run(args, cwd=ROOT, check=True)
-    for name in ("README.md", "LICENSE", "NOTICE"):
+    for name in ("README.md", "README.zh-CN.md", "LICENSE", "NOTICE"):
         shutil.copy2(ROOT / name, ROOT / "dist" / "wcltools" / name)
     # Keep the build environment's notices, including vendored dependencies.
     # Collecting these explicitly avoids relying on PyInstaller's data hooks.

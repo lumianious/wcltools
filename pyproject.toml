@@ -28,7 +28,7 @@ dev = [
 packages = ["wcltools"]
 
 [tool.hatch.build.targets.sdist]
-include = ["/wcltools", "/scripts/build_release.py", "/scripts/refresh_catalog.py", "/tests", "/README.md", "/LICENSE", "/NOTICE", "/pyproject.toml", "/uv.lock", "/.github"]
+include = ["/wcltools", "/scripts/build_release.py", "/scripts/refresh_catalog.py", "/tests", "/README.md", "/README.zh-CN.md", "/LICENSE", "/NOTICE", "/pyproject.toml", "/uv.lock", "/.github"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
