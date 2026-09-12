@@ -82,7 +82,9 @@ relevant damaged players separately and align their pull-relative offsets.
 JSON schema 1 preserves report-relative milliseconds, pull-relative `offset_ms`,
 source and target actor IDs, spell IDs, event types, and raw event fields.
 `--refresh` bypasses the one-hour read cache. `--output` always writes UTF-8,
-including on Windows.
+including on Windows. Relative output paths resolve from the current directory.
+Automation and agents should use stdout or an absolute path under the operating
+system's temporary directory or the cache path reported by `wcltools doctor --json`.
 
 Comparison is descriptive. It does not invent an optimal rotation, lost DPS,
 missed cooldowns, exact aura uptime, continuous resource balances, or whether a

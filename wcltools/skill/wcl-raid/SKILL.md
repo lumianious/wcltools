@@ -13,12 +13,21 @@ install the WCLTools release; do not invent a shell alias or silently install a
 different tool. `wcltools doctor --json` reports local setup without
 logging in. Never ask the user to paste a client secret into chat.
 
+## Keep analysis files out of the workspace
+
+Prefer reading JSON from stdout when it does not need to persist. When a command
+needs an intermediate file, run `wcltools doctor --json`, use its `paths.cache`
+directory, create a task-specific `analysis` subdirectory there, and pass an
+absolute path to `--output`. Never use a bare output filename or write generated
+WCL evidence into the caller's current directory, repository, or workspace root.
+Write a user-facing artifact elsewhere only when the user requests that destination.
+
 ## Find the evidence
 
 - Inspect `wcltools report REPORT --json` to select the actual fight and actor.
   Accept URL fight selections. Resolve duplicate names with the reported actor ID.
 - Fetch a player timeline with `wcltools timeline REPORT --fight ID --player ACTOR
-  --json --output timeline.json`. Add `--locale both` for live WCL Chinese labels
+  --json --output ABSOLUTE_ANALYSIS_PATH`. Add `--locale both` for live WCL Chinese labels
   alongside English names, using the same credentials. Default tracks include casts, buffs, boss events,
   and deaths; add `--tracks casts,resources` for resource evidence. Narrow a large
   response with `--from 01:00 --to 02:00`; offsets still refer to pull start.
@@ -36,9 +45,9 @@ logging in. Never ask the user to paste a client secret into chat.
   initial 12.1 target. Query `encounters --zone ZONE --json` for another zone rather
   than treating these numbers as permanently current. Reference output records
   the selected partition and metric. Fetch only the samples relevant to the question.
-- Compare saved timelines using `wcltools compare --left left.json --right right.json
+- Compare saved timelines using `wcltools compare --left ABSOLUTE_LEFT_JSON --right ABSOLUTE_RIGHT_JSON
   --json`. To show a timeline, generate `timeline ... --locale both --format html
-  --output timeline.html`. This is a local artifact; do not publish it implicitly.
+  --output ABSOLUTE_ANALYSIS_PATH`. This is a local artifact; do not publish it implicitly.
 
 ## Retrieve mechanics only when relevant
 

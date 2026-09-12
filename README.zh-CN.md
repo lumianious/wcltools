@@ -72,7 +72,9 @@ wcltools compare --left pull.json --right reference.json --json
 
 JSON schema 1 保留报告原始毫秒时间、相对开怪的 `offset_ms`、来源/目标 actor ID、
 法术 ID、事件类型和原始事件字段。`--refresh` 可绕过一小时只读缓存；`--output`
-在 Windows 上也始终写出 UTF-8。
+在 Windows 上也始终写出 UTF-8。相对输出路径以当前目录为基准；自动化与 Agent
+应优先读取标准输出，或使用操作系统临时目录、`wcltools doctor --json` 所报告缓存
+目录下的绝对路径。
 
 比较结果只描述观测差异，不会凭空推断最佳循环、损失 DPS、漏交技能、完整光环覆盖、
 连续资源余额或静默阶段是否失误。排名样本用于寻找参考报告，并不自动构成评分。
